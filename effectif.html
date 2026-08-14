@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Effectif — Club Bouliste Baie-Comeau</title>
+<link rel="icon" href="assets/logo-club.jpeg">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="entete">
+  <div class="entete-inner">
+    <a class="marque" href="index.html">
+      <img src="assets/logo-club.jpeg" alt="Logo Club Bouliste Baie-Comeau">
+      <span class="txt"><b>Club Bouliste</b><span>Baie-Comeau</span></span>
+    </a>
+    <button id="btn-burger" aria-label="Ouvrir le menu"><span></span></button>
+    <nav class="principale">
+      <a href="index.html">Accueil</a>
+      <a href="effectif.html">Effectif</a>
+      <a href="calendrier.html">Calendrier</a>
+      <a href="resultats.html">Résultats &amp; classement</a>
+      <a href="messagerie.html">Messagerie</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" style="padding:2.4rem 1.2rem;">
+  <div class="hero-inner">
+    <div class="eyebrow">Le club</div>
+    <h1>Effectif</h1>
+    <p class="lead">Les membres du Club Bouliste Baie-Comeau. Cliquez sur un joueur pour voir sa fiche complète.</p>
+  </div>
+</section>
+
+<main>
+  <section>
+    <div id="zone-effectif" class="grille cols-4">
+      <p class="vide">Chargement de l'effectif…</p>
+    </div>
+  </section>
+</main>
+
+<!-- Fiche joueur -->
+<div class="fond-modale" id="fond-modale">
+  <div class="modale">
+    <button class="fermer" id="btn-fermer-modale" aria-label="Fermer">&times;</button>
+    <img class="photo-tete" id="modale-photo" src="" alt="">
+    <div class="contenu">
+      <div class="role" id="modale-role"></div>
+      <h2 id="modale-nom"></h2>
+      <p id="modale-arrivee" style="color:#666;font-size:.88rem;"></p>
+      <p id="modale-bio"></p>
+      <div id="modale-contact"></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p><strong>Club Bouliste Baie-Comeau</strong> — Boulodrome sur sable, sous-sol</p>
+  <p><a href="admin.html">Espace administration</a></p>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/app.js"></script>
+<script>
+let joueursCache = {};
+
+db.collection("joueurs").orderBy("nom", "asc").get().then(snap => {
+  const zone = document.getElementById("zone-effectif");
+  if (snap.empty) {
+    zone.innerHTML = `<p class="vide">Aucun joueur n'a encore été ajouté à l'effectif.<br>Rendez-vous dans l'espace admin pour les ajouter.</p>`;
+    return;
+  }
+  zone.innerHTML = "";
+  snap.forEach(doc => {
+    const d = doc.data();
+    joueursCache[doc.id] = d;
+    zone.insertAdjacentHTML("beforeend", `
+      <div class="carte-joueur" data-id="${doc.id}">
+        ${d.photoUrl
+          ? `<img class="photo" src="${echapper(d.photoUrl)}" alt="${echapper(d.prenom + " " + d.nom)}">`
+          : `<div class="photo vide">${echapper((d.prenom || "?")[0])}${echapper((d.nom || "?")[0])}</div>`}
+        <div class="infos">
+          <div class="nom">${echapper(d.prenom)} ${echapper(d.nom)}</div>
+          <div class="role">${echapper(d.role || "Membre")}</div>
+        </div>
+      </div>
+    `);
+  });
+
+  document.querySelectorAll(".carte-joueur").forEach(carte => {
+    carte.addEventListener("click", () => ouvrirFiche(carte.dataset.id));
+  });
+}).catch(() => {
+  document.getElementById("zone-effectif").innerHTML = `<p class="vide">Impossible de charger l'effectif pour le moment.</p>`;
+});
+
+function ouvrirFiche(id) {
+  const d = joueursCache[id];
+  if (!d) return;
+  document.getElementById("modale-photo").src = d.photoUrl || "assets/logo-club.jpeg";
+  document.getElementById("modale-photo").alt = `${d.prenom} ${d.nom}`;
+  document.getElementById("modale-role").textContent = d.role || "Membre";
+  document.getElementById("modale-nom").textContent = `${d.prenom || ""} ${d.nom || ""}`;
+  document.getElementById("modale-arrivee").textContent = d.dateArrivee ? `Membre depuis ${formaterDate(d.dateArrivee)}` : "";
+  document.getElementById("modale-bio").textContent = d.bio || "";
+  const contact = [];
+  if (d.telephone) contact.push(`📞 ${d.telephone}`);
+  if (d.email) contact.push(`✉️ ${d.email}`);
+  document.getElementById("modale-contact").innerHTML = contact.map(c => `<p>${echapper(c)}</p>`).join("");
+  document.getElementById("fond-modale").classList.add("ouverte");
+}
+
+document.getElementById("btn-fermer-modale").addEventListener("click", () => {
+  document.getElementById("fond-modale").classList.remove("ouverte");
+});
+document.getElementById("fond-modale").addEventListener("click", (e) => {
+  if (e.target.id === "fond-modale") e.currentTarget.classList.remove("ouverte");
+});
+</script>
+</body>
+</html>

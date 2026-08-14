@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Club Bouliste Baie-Comeau</title>
+<meta name="description" content="Site officiel du Club Bouliste Baie-Comeau : effectif, calendrier, résultats, classement et messagerie du club.">
+<link rel="icon" href="assets/logo-club.jpeg">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="entete">
+  <div class="entete-inner">
+    <a class="marque" href="index.html">
+      <img src="assets/logo-club.jpeg" alt="Logo Club Bouliste Baie-Comeau">
+      <span class="txt"><b>Club Bouliste</b><span>Baie-Comeau</span></span>
+    </a>
+    <button id="btn-burger" aria-label="Ouvrir le menu"><span></span></button>
+    <nav class="principale">
+      <a href="index.html">Accueil</a>
+      <a href="effectif.html">Effectif</a>
+      <a href="calendrier.html">Calendrier</a>
+      <a href="resultats.html">Résultats &amp; classement</a>
+      <a href="messagerie.html">Messagerie</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Pétanque Québec — Boulodrome sur sable</div>
+    <h1>Bienvenue au Club Bouliste Baie-Comeau</h1>
+    <p class="lead">Rendez-vous au boulodrome situé au sous-sol pour jouer à la pétanque sur sable. Retrouvez ici l'effectif du club, le calendrier des parties, les résultats et le classement de la ligue.</p>
+    <div class="actions">
+      <a class="btn" href="calendrier.html">Voir le calendrier</a>
+      <a class="btn secondaire" href="resultats.html">Voir le classement</a>
+    </div>
+  </div>
+</section>
+
+<main>
+
+  <section id="infos-club">
+    <div class="section-tete">
+      <h2>Infos du club</h2>
+    </div>
+    <div id="zone-infos" class="grille cols-3">
+      <div class="carte"><p>Chargement des informations…</p></div>
+    </div>
+  </section>
+
+  <div class="piste"></div>
+
+  <section id="prochains-matchs">
+    <div class="section-tete">
+      <h2>Prochaines parties</h2>
+      <p><a href="calendrier.html">Voir tout le calendrier &rarr;</a></p>
+    </div>
+    <div id="zone-prochains-matchs" class="grille cols-2">
+      <p class="vide">Chargement…</p>
+    </div>
+  </section>
+
+  <div class="piste"></div>
+
+  <section id="apercu-classement">
+    <div class="section-tete">
+      <h2>Aperçu du classement</h2>
+      <p><a href="resultats.html">Classement complet &rarr;</a></p>
+    </div>
+    <div class="table-scroll">
+      <table class="classement" id="table-apercu-classement">
+        <thead>
+          <tr>
+            <th>Rang</th><th>Équipe</th><th>Joueurs</th><th>PJ</th><th>Points</th><th>Diff.</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="6" style="padding:1.4rem;">Chargement…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="piste"></div>
+
+  <section id="derniers-messages">
+    <div class="section-tete">
+      <h2>Sur la messagerie</h2>
+      <p><a href="messagerie.html">Voir la messagerie &rarr;</a></p>
+    </div>
+    <div id="zone-derniers-messages" class="grille cols-2">
+      <p class="vide">Chargement…</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p><strong>Club Bouliste Baie-Comeau</strong> — Boulodrome sur sable, sous-sol</p>
+  <p><a href="admin.html">Espace administration</a></p>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/app.js"></script>
+<script>
+// ---------- Infos du club ----------
+db.collection("infos").doc("general").get().then(doc => {
+  const zone = document.getElementById("zone-infos");
+  if (!doc.exists) {
+    zone.innerHTML = `<div class="carte"><p>Les informations du club n'ont pas encore été ajoutées. Rendez-vous dans l'espace admin pour les remplir.</p></div>`;
+    return;
+  }
+  const d = doc.data();
+  zone.innerHTML = `
+    <div class="carte"><h3>Horaires</h3><p>${echapper(d.horaires || "Non renseigné")}</p></div>
+    <div class="carte"><h3>Adresse</h3><p>${echapper(d.adresse || "Non renseignée")}</p></div>
+    <div class="carte"><h3>Contact</h3><p>${echapper(d.contact || "Non renseigné")}</p></div>
+    ${d.motDuClub ? `<div class="carte" style="grid-column:1/-1"><h3>Mot du club</h3><p>${echapper(d.motDuClub)}</p></div>` : ""}
+  `;
+}).catch(() => {
+  document.getElementById("zone-infos").innerHTML = `<div class="carte"><p>Impossible de charger les informations pour le moment.</p></div>`;
+});
+
+// ---------- Prochaines parties (3 max, à partir d'aujourd'hui) ----------
+const aujourdhui = new Date().toISOString().slice(0,10);
+db.collection("calendrier")
+  .where("date", ">=", aujourdhui)
+  .orderBy("date", "asc")
+  .limit(3)
+  .get()
+  .then(snap => {
+    const zone = document.getElementById("zone-prochains-matchs");
+    if (snap.empty) {
+      zone.innerHTML = `<p class="vide">Aucune partie à venir pour le moment.</p>`;
+      return;
+    }
+    zone.innerHTML = "";
+    snap.forEach(doc => {
+      const d = doc.data();
+      const b = formaterDateBloc(d.date);
+      zone.insertAdjacentHTML("beforeend", `
+        <div class="match">
+          <div class="date-bloc"><div class="jour">${b.jour}</div><div class="mois">${b.mois}</div></div>
+          <div class="detail">
+            <div class="type">${echapper(d.type || "Partie")}</div>
+            <h4>${echapper(d.titre || "Partie de pétanque")}</h4>
+            <div class="lieu">${echapper(d.lieu || "")}${d.heure ? " · " + echapper(d.heure) : ""}</div>
+          </div>
+        </div>
+      `);
+    });
+  }).catch(() => {
+    document.getElementById("zone-prochains-matchs").innerHTML = `<p class="vide">Impossible de charger le calendrier.</p>`;
+  });
+
+// ---------- Aperçu du classement (5 premiers) ----------
+db.collection("equipes").orderBy("pointsAccumules", "desc").limit(5).get().then(snap => {
+  const tbody = document.querySelector("#table-apercu-classement tbody");
+  if (snap.empty) {
+    tbody.innerHTML = `<tr><td colspan="6" style="padding:1.4rem;">Le classement n'a pas encore été saisi.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = "";
+  let rang = 1;
+  snap.forEach(doc => {
+    const d = doc.data();
+    const diff = (d.pointsPour || 0) - (d.pointsContre || 0);
+    const joueurs = [d.capitaine, d.joueur2, d.joueur3].filter(Boolean).join(", ");
+    tbody.insertAdjacentHTML("beforeend", `
+      <tr>
+        <td class="rang">${rang}</td>
+        <td>${echapper(d.nomEquipe || ("Équipe " + rang))}</td>
+        <td class="joueurs">${echapper(joueurs)}</td>
+        <td>${d.partiesJouees || 0}</td>
+        <td>${d.pointsAccumules || 0}</td>
+        <td class="diff ${diff >= 0 ? "positif" : "negatif"}">${diff >= 0 ? "+" : ""}${diff}</td>
+      </tr>
+    `);
+    rang++;
+  });
+}).catch(() => {
+  document.querySelector("#table-apercu-classement tbody").innerHTML = `<tr><td colspan="6" style="padding:1.4rem;">Impossible de charger le classement.</td></tr>`;
+});
+
+// ---------- Derniers messages (2 max) ----------
+db.collection("messages").orderBy("date", "desc").limit(2).get().then(snap => {
+  const zone = document.getElementById("zone-derniers-messages");
+  if (snap.empty) {
+    zone.innerHTML = `<p class="vide">Aucun message pour le moment.</p>`;
+    return;
+  }
+  zone.innerHTML = "";
+  snap.forEach(doc => {
+    const d = doc.data();
+    zone.insertAdjacentHTML("beforeend", `
+      <div class="message">
+        <div class="entete-msg"><span class="auteur">${echapper(d.auteur)}</span><span>${d.date ? formaterDate(d.date) : ""}</span></div>
+        <p>${echapper(d.contenu)}</p>
+      </div>
+    `);
+  });
+}).catch(() => {
+  document.getElementById("zone-derniers-messages").innerHTML = `<p class="vide">Impossible de charger les messages.</p>`;
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Résultats &amp; classement — Club Bouliste Baie-Comeau</title>
+<link rel="icon" href="assets/logo-club.jpeg">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="entete">
+  <div class="entete-inner">
+    <a class="marque" href="index.html">
+      <img src="assets/logo-club.jpeg" alt="Logo Club Bouliste Baie-Comeau">
+      <span class="txt"><b>Club Bouliste</b><span>Baie-Comeau</span></span>
+    </a>
+    <button id="btn-burger" aria-label="Ouvrir le menu"><span></span></button>
+    <nav class="principale">
+      <a href="index.html">Accueil</a>
+      <a href="effectif.html">Effectif</a>
+      <a href="calendrier.html">Calendrier</a>
+      <a href="resultats.html">Résultats &amp; classement</a>
+      <a href="messagerie.html">Messagerie</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" style="padding:2.4rem 1.2rem;">
+  <div class="hero-inner">
+    <div class="eyebrow">Ligue du club</div>
+    <h1 id="titre-ligue">Statistiques pétanque</h1>
+    <p class="lead" id="soustitre-ligue">Classement cumulatif de la ligue, mis à jour manuellement après chaque journée.</p>
+  </div>
+</section>
+
+<main>
+  <section>
+    <div class="section-tete">
+      <h2>Classement</h2>
+      <p id="date-maj" style="color:#c8102e; font-weight:600;"></p>
+    </div>
+    <div class="table-scroll">
+      <table class="classement">
+        <thead>
+          <tr>
+            <th>Rang</th>
+            <th>PJ</th>
+            <th>Points accumulés</th>
+            <th>Équipe</th>
+            <th>Capitaine</th>
+            <th>Joueur</th>
+            <th>Joueur</th>
+            <th>Points pour</th>
+            <th>Points contre</th>
+            <th>Différentiel</th>
+          </tr>
+        </thead>
+        <tbody id="corps-classement">
+          <tr><td colspan="10" style="padding:1.4rem;">Chargement…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p><strong>Club Bouliste Baie-Comeau</strong> — Boulodrome sur sable, sous-sol</p>
+  <p><a href="admin.html">Espace administration</a></p>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/app.js"></script>
+<script>
+// En-tête de ligue (nom de la ligue, date de la dernière mise à jour) — doc unique éditable dans l'admin
+db.collection("infos").doc("ligue").get().then(doc => {
+  if (doc.exists) {
+    const d = doc.data();
+    if (d.nomLigue) document.getElementById("titre-ligue").textContent = d.nomLigue;
+    if (d.dateMaj) document.getElementById("date-maj").textContent = "Mise à jour : " + formaterDate(d.dateMaj);
+  }
+}).catch(() => {});
+
+db.collection("equipes").orderBy("pointsAccumules", "desc").get().then(snap => {
+  const corps = document.getElementById("corps-classement");
+  if (snap.empty) {
+    corps.innerHTML = `<tr><td colspan="10" style="padding:1.4rem;">Le classement n'a pas encore été saisi. Rendez-vous dans l'espace admin.</td></tr>`;
+    return;
+  }
+  corps.innerHTML = "";
+  let rang = 1;
+  snap.forEach(doc => {
+    const d = doc.data();
+    const diff = (d.pointsPour || 0) - (d.pointsContre || 0);
+    corps.insertAdjacentHTML("beforeend", `
+      <tr>
+        <td class="rang">${rang}</td>
+        <td>${d.partiesJouees || 0}</td>
+        <td><strong>${d.pointsAccumules || 0}</strong></td>
+        <td>${echapper(d.numeroEquipe || rang)}</td>
+        <td class="joueurs">${echapper(d.capitaine || "")}</td>
+        <td class="joueurs">${echapper(d.joueur2 || "")}</td>
+        <td class="joueurs">${echapper(d.joueur3 || "")}</td>
+        <td>${d.pointsPour || 0}</td>
+        <td>${d.pointsContre || 0}</td>
+        <td class="diff ${diff >= 0 ? "positif" : "negatif"}">${diff >= 0 ? "+" : ""}${diff}</td>
+      </tr>
+    `);
+    rang++;
+  });
+}).catch(() => {
+  document.getElementById("corps-classement").innerHTML = `<tr><td colspan="10" style="padding:1.4rem;">Impossible de charger le classement pour le moment.</td></tr>`;
+});
+</script>
+</body>
+</html>

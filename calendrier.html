@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendrier — Club Bouliste Baie-Comeau</title>
+<link rel="icon" href="assets/logo-club.jpeg">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="entete">
+  <div class="entete-inner">
+    <a class="marque" href="index.html">
+      <img src="assets/logo-club.jpeg" alt="Logo Club Bouliste Baie-Comeau">
+      <span class="txt"><b>Club Bouliste</b><span>Baie-Comeau</span></span>
+    </a>
+    <button id="btn-burger" aria-label="Ouvrir le menu"><span></span></button>
+    <nav class="principale">
+      <a href="index.html">Accueil</a>
+      <a href="effectif.html">Effectif</a>
+      <a href="calendrier.html">Calendrier</a>
+      <a href="resultats.html">Résultats &amp; classement</a>
+      <a href="messagerie.html">Messagerie</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" style="padding:2.4rem 1.2rem;">
+  <div class="hero-inner">
+    <div class="eyebrow">Le club</div>
+    <h1>Calendrier</h1>
+    <p class="lead">Toutes les parties du club : championnats, amicaux et tournois.</p>
+  </div>
+</section>
+
+<main>
+  <section>
+    <div class="section-tete">
+      <h2 id="titre-liste">À venir</h2>
+      <div style="display:flex; gap:.5rem;">
+        <button id="btn-a-venir" class="btn">À venir</button>
+        <button id="btn-passees" class="btn secondaire">Passées</button>
+      </div>
+    </div>
+    <div id="zone-calendrier" class="grille cols-2">
+      <p class="vide">Chargement du calendrier…</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p><strong>Club Bouliste Baie-Comeau</strong> — Boulodrome sur sable, sous-sol</p>
+  <p><a href="admin.html">Espace administration</a></p>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/app.js"></script>
+<script>
+const aujourdhui = new Date().toISOString().slice(0,10);
+
+function chargerCalendrier(mode) {
+  const zone = document.getElementById("zone-calendrier");
+  zone.innerHTML = `<p class="vide">Chargement…</p>`;
+  document.getElementById("titre-liste").textContent = mode === "avenir" ? "À venir" : "Parties passées";
+
+  let requete = db.collection("calendrier");
+  requete = mode === "avenir"
+    ? requete.where("date", ">=", aujourdhui).orderBy("date", "asc")
+    : requete.where("date", "<", aujourdhui).orderBy("date", "desc");
+
+  requete.get().then(snap => {
+    if (snap.empty) {
+      zone.innerHTML = `<p class="vide">${mode === "avenir" ? "Aucune partie à venir pour le moment." : "Aucune partie passée enregistrée."}</p>`;
+      return;
+    }
+    zone.innerHTML = "";
+    snap.forEach(doc => {
+      const d = doc.data();
+      const b = formaterDateBloc(d.date);
+      zone.insertAdjacentHTML("beforeend", `
+        <div class="match">
+          <div class="date-bloc"><div class="jour">${b.jour}</div><div class="mois">${b.mois}</div></div>
+          <div class="detail">
+            <div class="type">${echapper(d.type || "Partie")}</div>
+            <h4>${echapper(d.titre || "Partie de pétanque")}</h4>
+            <div class="lieu">${echapper(d.lieu || "")}${d.heure ? " · " + echapper(d.heure) : ""}</div>
+            ${d.description ? `<p style="margin:.4rem 0 0; font-size:.88rem; color:#555;">${echapper(d.description)}</p>` : ""}
+          </div>
+        </div>
+      `);
+    });
+  }).catch(() => {
+    zone.innerHTML = `<p class="vide">Impossible de charger le calendrier pour le moment.</p>`;
+  });
+}
+
+document.getElementById("btn-a-venir").addEventListener("click", (e) => {
+  chargerCalendrier("avenir");
+  e.target.classList.remove("secondaire");
+  document.getElementById("btn-passees").classList.add("secondaire");
+});
+document.getElementById("btn-passees").addEventListener("click", (e) => {
+  chargerCalendrier("passees");
+  e.target.classList.remove("secondaire");
+  document.getElementById("btn-a-venir").classList.add("secondaire");
+});
+
+chargerCalendrier("avenir");
+</script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Messagerie — Club Bouliste Baie-Comeau</title>
+<link rel="icon" href="assets/logo-club.jpeg">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="entete">
+  <div class="entete-inner">
+    <a class="marque" href="index.html">
+      <img src="assets/logo-club.jpeg" alt="Logo Club Bouliste Baie-Comeau">
+      <span class="txt"><b>Club Bouliste</b><span>Baie-Comeau</span></span>
+    </a>
+    <button id="btn-burger" aria-label="Ouvrir le menu"><span></span></button>
+    <nav class="principale">
+      <a href="index.html">Accueil</a>
+      <a href="effectif.html">Effectif</a>
+      <a href="calendrier.html">Calendrier</a>
+      <a href="resultats.html">Résultats &amp; classement</a>
+      <a href="messagerie.html">Messagerie</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" style="padding:2.4rem 1.2rem;">
+  <div class="hero-inner">
+    <div class="eyebrow">Le club</div>
+    <h1>Messagerie</h1>
+    <p class="lead">Annonces du club et petits mots entre membres.</p>
+  </div>
+</section>
+
+<main>
+  <section>
+    <div class="carte" style="max-width:640px;">
+      <h3>Laisser un message</h3>
+      <div id="alerte-message"></div>
+      <form id="form-message">
+        <div class="champ">
+          <label for="champ-auteur">Votre nom</label>
+          <input type="text" id="champ-auteur" required maxlength="60">
+        </div>
+        <div class="champ">
+          <label for="champ-contenu">Message</label>
+          <textarea id="champ-contenu" rows="3" required maxlength="600"></textarea>
+        </div>
+        <button type="submit">Publier</button>
+      </form>
+    </div>
+  </section>
+
+  <div class="piste"></div>
+
+  <section>
+    <div class="section-tete"><h2>Messages</h2></div>
+    <div id="zone-messages" class="grille cols-2">
+      <p class="vide">Chargement des messages…</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p><strong>Club Bouliste Baie-Comeau</strong> — Boulodrome sur sable, sous-sol</p>
+  <p><a href="admin.html">Espace administration</a></p>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/app.js"></script>
+<script>
+function chargerMessages() {
+  const zone = document.getElementById("zone-messages");
+  db.collection("messages").orderBy("date", "desc").get().then(snap => {
+    if (snap.empty) {
+      zone.innerHTML = `<p class="vide">Aucun message pour le moment. Soyez le premier à écrire !</p>`;
+      return;
+    }
+    zone.innerHTML = "";
+    snap.forEach(doc => {
+      const d = doc.data();
+      zone.insertAdjacentHTML("beforeend", `
+        <div class="message">
+          <div class="entete-msg">
+            <span class="auteur">${echapper(d.auteur)}</span>
+            <span>${d.date ? formaterDate(d.date) : ""}</span>
+          </div>
+          <p>${echapper(d.contenu)}</p>
+        </div>
+      `);
+    });
+  }).catch(() => {
+    zone.innerHTML = `<p class="vide">Impossible de charger les messages pour le moment.</p>`;
+  });
+}
+
+document.getElementById("form-message").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const auteur = document.getElementById("champ-auteur").value.trim();
+  const contenu = document.getElementById("champ-contenu").value.trim();
+  if (!auteur || !contenu) return;
+
+  const bouton = e.target.querySelector("button");
+  bouton.disabled = true;
+  bouton.textContent = "Publication…";
+
+  db.collection("messages").add({
+    auteur,
+    contenu,
+    date: new Date().toISOString().slice(0,10)
+  }).then(() => {
+    document.getElementById("form-message").reset();
+    afficherAlerte("alerte-message", "Message publié !", "ok");
+    chargerMessages();
+  }).catch(() => {
+    afficherAlerte("alerte-message", "Impossible de publier le message. Réessayez.", "erreur");
+  }).finally(() => {
+    bouton.disabled = false;
+    bouton.textContent = "Publier";
+  });
+});
+
+chargerMessages();
+</script>
+</body>
+</html>

@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Administration — Club Bouliste Baie-Comeau</title>
+<link rel="icon" href="assets/logo-club.jpeg">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .onglets{ display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:1.4rem; }
+  .onglets button{ background: var(--acier-clair); color: var(--noir); }
+  .onglets button.actif{ background: var(--rouge); color:#fff; }
+  .panneau{ display:none; }
+  .panneau.actif{ display:block; }
+  .liste-admin{ display:flex; flex-direction:column; gap:.6rem; margin-top:1.4rem; }
+  .ligne-admin{
+    display:flex; align-items:center; justify-content:space-between; gap:1rem;
+    background:#fff; border-radius:8px; box-shadow: var(--ombre); padding:.7rem 1rem;
+  }
+  .ligne-admin .actions-ligne{ display:flex; gap:.4rem; flex-shrink:0; }
+  .ligne-admin .actions-ligne button{ padding:.4rem .7rem; font-size:.75rem; }
+  .ligne-admin .txt strong{ display:block; }
+  .ligne-admin .txt span{ color:#666; font-size:.85rem; }
+  form.form-grille{ display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap:.9rem; }
+  form.form-grille .pleine{ grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+
+<header class="entete">
+  <div class="entete-inner">
+    <a class="marque" href="index.html">
+      <img src="assets/logo-club.jpeg" alt="Logo Club Bouliste Baie-Comeau">
+      <span class="txt"><b>Club Bouliste</b><span>Baie-Comeau</span></span>
+    </a>
+    <button id="btn-burger" aria-label="Ouvrir le menu"><span></span></button>
+    <nav class="principale">
+      <a href="index.html">Accueil</a>
+      <a href="effectif.html">Effectif</a>
+      <a href="calendrier.html">Calendrier</a>
+      <a href="resultats.html">Résultats &amp; classement</a>
+      <a href="messagerie.html">Messagerie</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- ================= CONNEXION ================= -->
+  <section id="ecran-connexion">
+    <h1>Espace administration</h1>
+    <p>Connectez-vous pour gérer le contenu du site (effectif, calendrier, classement, infos, messages).</p>
+    <div class="carte" style="max-width:420px;">
+      <div id="alerte-connexion"></div>
+      <form id="form-connexion">
+        <div class="champ">
+          <label for="champ-email">Adresse e-mail</label>
+          <input type="email" id="champ-email" required>
+        </div>
+        <div class="champ">
+          <label for="champ-mdp">Mot de passe</label>
+          <input type="password" id="champ-mdp" required>
+        </div>
+        <button type="submit">Se connecter</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ================= PANNEAU ADMIN ================= -->
+  <section id="ecran-admin" style="display:none;">
+    <div class="section-tete">
+      <h1>Administration</h1>
+      <button id="btn-deconnexion" class="secondaire">Se déconnecter</button>
+    </div>
+
+    <div class="onglets">
+      <button data-cible="onglet-infos" class="actif">Infos du club</button>
+      <button data-cible="onglet-joueurs">Effectif</button>
+      <button data-cible="onglet-calendrier">Calendrier</button>
+      <button data-cible="onglet-classement">Classement</button>
+      <button data-cible="onglet-messages">Messages</button>
+    </div>
+
+    <!-- ---- Infos ---- -->
+    <div class="panneau actif" id="onglet-infos">
+      <div class="carte">
+        <h3>Coordonnées du club</h3>
+        <div id="alerte-infos"></div>
+        <form id="form-infos" class="form-grille">
+          <div class="champ"><label>Horaires</label><input type="text" id="infos-horaires" placeholder="Ex: mardi et jeudi, 13h-16h"></div>
+          <div class="champ"><label>Adresse</label><input type="text" id="infos-adresse" placeholder="Ex: 123 rue du Boulodrome, Baie-Comeau"></div>
+          <div class="champ"><label>Contact</label><input type="text" id="infos-contact" placeholder="Ex: 418 000-0000"></div>
+          <div class="champ pleine"><label>Mot du club</label><textarea id="infos-mot" rows="3"></textarea></div>
+          <div class="pleine"><button type="submit">Enregistrer</button></div>
+        </form>
+      </div>
+      <div class="carte" style="margin-top:1.2rem;">
+        <h3>En-tête de la page « Résultats & classement »</h3>
+        <div id="alerte-ligue"></div>
+        <form id="form-ligue" class="form-grille">
+          <div class="champ"><label>Nom de la ligue</label><input type="text" id="ligue-nom" placeholder="Ex: Statistiques pétanque saison 2025-2026"></div>
+          <div class="champ"><label>Date de mise à jour</label><input type="date" id="ligue-date"></div>
+          <div class="pleine"><button type="submit">Enregistrer</button></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ---- Joueurs ---- -->
+    <div class="panneau" id="onglet-joueurs">
+      <div class="carte">
+        <h3 id="titre-form-joueur">Ajouter un joueur</h3>
+        <div id="alerte-joueur"></div>
+        <form id="form-joueur" class="form-grille">
+          <input type="hidden" id="joueur-id">
+          <div class="champ"><label>Prénom</label><input type="text" id="joueur-prenom" required></div>
+          <div class="champ"><label>Nom</label><input type="text" id="joueur-nom" required></div>
+          <div class="champ"><label>Rôle</label>
+            <select id="joueur-role">
+              <option value="Capitaine">Capitaine</option>
+              <option value="Joueur" selected>Joueur</option>
+              <option value="Membre">Membre</option>
+            </select>
+          </div>
+          <div class="champ"><label>Membre depuis</label><input type="date" id="joueur-arrivee"></div>
+          <div class="champ"><label>Téléphone</label><input type="text" id="joueur-telephone"></div>
+          <div class="champ"><label>E-mail</label><input type="email" id="joueur-email"></div>
+          <div class="champ pleine"><label>Photo (URL — ex: lien d'une image hébergée en ligne)</label><input type="url" id="joueur-photo" placeholder="https://..."></div>
+          <div class="champ pleine"><label>Bio / notes</label><textarea id="joueur-bio" rows="2"></textarea></div>
+          <div class="pleine" style="display:flex; gap:.6rem;">
+            <button type="submit">Enregistrer</button>
+            <button type="button" class="secondaire" id="btn-annuler-joueur" style="display:none;">Annuler la modification</button>
+          </div>
+        </form>
+      </div>
+      <div id="liste-joueurs" class="liste-admin"></div>
+    </div>
+
+    <!-- ---- Calendrier ---- -->
+    <div class="panneau" id="onglet-calendrier">
+      <div class="carte">
+        <h3 id="titre-form-match">Ajouter une partie</h3>
+        <div id="alerte-match"></div>
+        <form id="form-match" class="form-grille">
+          <input type="hidden" id="match-id">
+          <div class="champ"><label>Date</label><input type="date" id="match-date" required></div>
+          <div class="champ"><label>Heure</label><input type="time" id="match-heure"></div>
+          <div class="champ"><label>Type</label>
+            <select id="match-type">
+              <option>Championnat</option>
+              <option>Amical</option>
+              <option>Tournoi</option>
+              <option>Entraînement</option>
+            </select>
+          </div>
+          <div class="champ"><label>Titre</label><input type="text" id="match-titre" placeholder="Ex: Ligue à Ti-Guy"></div>
+          <div class="champ pleine"><label>Lieu</label><input type="text" id="match-lieu" placeholder="Boulodrome, sous-sol"></div>
+          <div class="champ pleine"><label>Description</label><textarea id="match-description" rows="2"></textarea></div>
+          <div class="pleine" style="display:flex; gap:.6rem;">
+            <button type="submit">Enregistrer</button>
+            <button type="button" class="secondaire" id="btn-annuler-match" style="display:none;">Annuler la modification</button>
+          </div>
+        </form>
+      </div>
+      <div id="liste-calendrier" class="liste-admin"></div>
+    </div>
+
+    <!-- ---- Classement ---- -->
+    <div class="panneau" id="onglet-classement">
+      <div class="carte">
+        <h3 id="titre-form-equipe">Ajouter une équipe</h3>
+        <div id="alerte-equipe"></div>
+        <form id="form-equipe" class="form-grille">
+          <input type="hidden" id="equipe-id">
+          <div class="champ"><label>N° équipe</label><input type="text" id="equipe-numero"></div>
+          <div class="champ"><label>Capitaine</label><input type="text" id="equipe-capitaine" required></div>
+          <div class="champ"><label>Joueur 2</label><input type="text" id="equipe-joueur2"></div>
+          <div class="champ"><label>Joueur 3</label><input type="text" id="equipe-joueur3"></div>
+          <div class="champ"><label>Parties jouées</label><input type="number" id="equipe-pj" value="0"></div>
+          <div class="champ"><label>Points accumulés</label><input type="number" id="equipe-points" value="0"></div>
+          <div class="champ"><label>Points pour</label><input type="number" id="equipe-pour" value="0"></div>
+          <div class="champ"><label>Points contre</label><input type="number" id="equipe-contre" value="0"></div>
+          <div class="pleine" style="display:flex; gap:.6rem;">
+            <button type="submit">Enregistrer</button>
+            <button type="button" class="secondaire" id="btn-annuler-equipe" style="display:none;">Annuler la modification</button>
+          </div>
+        </form>
+      </div>
+      <div id="liste-equipes" class="liste-admin"></div>
+    </div>
+
+    <!-- ---- Messages ---- -->
+    <div class="panneau" id="onglet-messages">
+      <p>Modération des messages publiés sur la messagerie du site.</p>
+      <div id="liste-messages" class="liste-admin"></div>
+    </div>
+
+  </section>
+</main>
+
+<footer>
+  <p><strong>Club Bouliste Baie-Comeau</strong> — Boulodrome sur sable, sous-sol</p>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/app.js"></script>
+<script>
+/* ============================================================
+   Connexion / déconnexion
+   ============================================================ */
+auth.onAuthStateChanged(user => {
+  document.getElementById("ecran-connexion").style.display = user ? "none" : "block";
+  document.getElementById("ecran-admin").style.display = user ? "block" : "none";
+  if (user) chargerTout();
+});
+
+document.getElementById("form-connexion").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const email = document.getElementById("champ-email").value.trim();
+  const mdp = document.getElementById("champ-mdp").value;
+  auth.signInWithEmailAndPassword(email, mdp).catch(() => {
+    afficherAlerte("alerte-connexion", "E-mail ou mot de passe incorrect.", "erreur");
+  });
+});
+
+document.getElementById("btn-deconnexion").addEventListener("click", () => auth.signOut());
+
+/* ============================================================
+   Onglets
+   ============================================================ */
+document.querySelectorAll(".onglets button").forEach(bouton => {
+  bouton.addEventListener("click", () => {
+    document.querySelectorAll(".onglets button").forEach(b => b.classList.remove("actif"));
+    document.querySelectorAll(".panneau").forEach(p => p.classList.remove("actif"));
+    bouton.classList.add("actif");
+    document.getElementById(bouton.dataset.cible).classList.add("actif");
+  });
+});
+
+function chargerTout() {
+  chargerInfos();
+  chargerJoueurs();
+  chargerCalendrierAdmin();
+  chargerEquipes();
+  chargerMessagesAdmin();
+}
+
+/* ============================================================
+   Infos du club
+   ============================================================ */
+db.collection("infos").doc("general").get().then(doc => {
+  if (!doc.exists) return;
+  const d = doc.data();
+  document.getElementById("infos-horaires").value = d.horaires || "";
+  document.getElementById("infos-adresse").value = d.adresse || "";
+  document.getElementById("infos-contact").value = d.contact || "";
+  document.getElementById("infos-mot").value = d.motDuClub || "";
+});
+db.collection("infos").doc("ligue").get().then(doc => {
+  if (!doc.exists) return;
+  const d = doc.data();
+  document.getElementById("ligue-nom").value = d.nomLigue || "";
+  document.getElementById("ligue-date").value = d.dateMaj || "";
+});
+function chargerInfos(){} // les infos sont chargées une seule fois au démarrage (voir ci-dessus)
+
+document.getElementById("form-infos").addEventListener("submit", (e) => {
+  e.preventDefault();
+  db.collection("infos").doc("general").set({
+    horaires: document.getElementById("infos-horaires").value.trim(),
+    adresse: document.getElementById("infos-adresse").value.trim(),
+    contact: document.getElementById("infos-contact").value.trim(),
+    motDuClub: document.getElementById("infos-mot").value.trim()
+  }).then(() => afficherAlerte("alerte-infos", "Coordonnées enregistrées.", "ok"))
+    .catch(() => afficherAlerte("alerte-infos", "Erreur lors de l'enregistrement.", "erreur"));
+});
+
+document.getElementById("form-ligue").addEventListener("submit", (e) => {
+  e.preventDefault();
+  db.collection("infos").doc("ligue").set({
+    nomLigue: document.getElementById("ligue-nom").value.trim(),
+    dateMaj: document.getElementById("ligue-date").value
+  }).then(() => afficherAlerte("alerte-ligue", "En-tête enregistré.", "ok"))
+    .catch(() => afficherAlerte("alerte-ligue", "Erreur lors de l'enregistrement.", "erreur"));
+});
+
+/* ============================================================
+   Joueurs (effectif)
+   ============================================================ */
+function chargerJoueurs() {
+  db.collection("joueurs").orderBy("nom", "asc").get().then(snap => {
+    const zone = document.getElementById("liste-joueurs");
+    if (snap.empty) { zone.innerHTML = `<p class="vide">Aucun joueur ajouté.</p>`; return; }
+    zone.innerHTML = "";
+    snap.forEach(doc => {
+      const d = doc.data();
+      zone.insertAdjacentHTML("beforeend", `
+        <div class="ligne-admin">
+          <div class="txt"><strong>${echapper(d.prenom)} ${echapper(d.nom)}</strong><span>${echapper(d.role || "Membre")}</span></div>
+          <div class="actions-ligne">
+            <button onclick="editerJoueur('${doc.id}')">Modifier</button>
+            <button class="secondaire" onclick="supprimerJoueur('${doc.id}')">Supprimer</button>
+          </div>
+        </div>
+      `);
+    });
+  });
+}
+
+let joueursData = {};
+db.collection("joueurs").onSnapshot(snap => {
+  joueursData = {};
+  snap.forEach(doc => joueursData[doc.id] = doc.data());
+});
+
+function editerJoueur(id) {
+  const d = joueursData[id];
+  if (!d) return;
+  document.getElementById("joueur-id").value = id;
+  document.getElementById("joueur-prenom").value = d.prenom || "";
+  document.getElementById("joueur-nom").value = d.nom || "";
+  document.getElementById("joueur-role").value = d.role || "Joueur";
+  document.getElementById("joueur-arrivee").value = d.dateArrivee || "";
+  document.getElementById("joueur-telephone").value = d.telephone || "";
+  document.getElementById("joueur-email").value = d.email || "";
+  document.getElementById("joueur-photo").value = d.photoUrl || "";
+  document.getElementById("joueur-bio").value = d.bio || "";
+  document.getElementById("titre-form-joueur").textContent = "Modifier le joueur";
+  document.getElementById("btn-annuler-joueur").style.display = "inline-block";
+  document.getElementById("onglet-joueurs").scrollIntoView({behavior:"smooth"});
+}
+
+document.getElementById("btn-annuler-joueur").addEventListener("click", () => reinitialiserFormJoueur());
+function reinitialiserFormJoueur() {
+  document.getElementById("form-joueur").reset();
+  document.getElementById("joueur-id").value = "";
+  document.getElementById("titre-form-joueur").textContent = "Ajouter un joueur";
+  document.getElementById("btn-annuler-joueur").style.display = "none";
+}
+
+document.getElementById("form-joueur").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const id = document.getElementById("joueur-id").value;
+  const donnees = {
+    prenom: document.getElementById("joueur-prenom").value.trim(),
+    nom: document.getElementById("joueur-nom").value.trim(),
+    role: document.getElementById("joueur-role").value,
+    dateArrivee: document.getElementById("joueur-arrivee").value,
+    telephone: document.getElementById("joueur-telephone").value.trim(),
+    email: document.getElementById("joueur-email").value.trim(),
+    photoUrl: document.getElementById("joueur-photo").value.trim(),
+    bio: document.getElementById("joueur-bio").value.trim()
+  };
+  const promesse = id ? db.collection("joueurs").doc(id).set(donnees) : db.collection("joueurs").add(donnees);
+  promesse.then(() => {
+    afficherAlerte("alerte-joueur", "Joueur enregistré.", "ok");
+    reinitialiserFormJoueur();
+    chargerJoueurs();
+  }).catch(() => afficherAlerte("alerte-joueur", "Erreur lors de l'enregistrement.", "erreur"));
+});
+
+function supprimerJoueur(id) {
+  if (!confirm("Supprimer ce joueur de l'effectif ?")) return;
+  db.collection("joueurs").doc(id).delete().then(chargerJoueurs);
+}
+
+/* ============================================================
+   Calendrier
+   ============================================================ */
+let matchsData = {};
+db.collection("calendrier").onSnapshot(snap => {
+  matchsData = {};
+  snap.forEach(doc => matchsData[doc.id] = doc.data());
+});
+
+function chargerCalendrierAdmin() {
+  db.collection("calendrier").orderBy("date", "desc").get().then(snap => {
+    const zone = document.getElementById("liste-calendrier");
+    if (snap.empty) { zone.innerHTML = `<p class="vide">Aucune partie ajoutée.</p>`; return; }
+    zone.innerHTML = "";
+    snap.forEach(doc => {
+      const d = doc.data();
+      zone.insertAdjacentHTML("beforeend", `
+        <div class="ligne-admin">
+          <div class="txt"><strong>${d.date ? formaterDate(d.date) : ""} — ${echapper(d.titre || d.type || "Partie")}</strong><span>${echapper(d.lieu || "")}</span></div>
+          <div class="actions-ligne">
+            <button onclick="editerMatch('${doc.id}')">Modifier</button>
+            <button class="secondaire" onclick="supprimerMatch('${doc.id}')">Supprimer</button>
+          </div>
+        </div>
+      `);
+    });
+  });
+}
+
+function editerMatch(id) {
+  const d = matchsData[id];
+  if (!d) return;
+  document.getElementById("match-id").value = id;
+  document.getElementById("match-date").value = d.date || "";
+  document.getElementById("match-heure").value = d.heure || "";
+  document.getElementById("match-type").value = d.type || "Championnat";
+  document.getElementById("match-titre").value = d.titre || "";
+  document.getElementById("match-lieu").value = d.lieu || "";
+  document.getElementById("match-description").value = d.description || "";
+  document.getElementById("titre-form-match").textContent = "Modifier la partie";
+  document.getElementById("btn-annuler-match").style.display = "inline-block";
+  document.getElementById("onglet-calendrier").scrollIntoView({behavior:"smooth"});
+}
+
+document.getElementById("btn-annuler-match").addEventListener("click", () => reinitialiserFormMatch());
+function reinitialiserFormMatch() {
+  document.getElementById("form-match").reset();
+  document.getElementById("match-id").value = "";
+  document.getElementById("titre-form-match").textContent = "Ajouter une partie";
+  document.getElementById("btn-annuler-match").style.display = "none";
+}
+
+document.getElementById("form-match").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const id = document.getElementById("match-id").value;
+  const donnees = {
+    date: document.getElementById("match-date").value,
+    heure: document.getElementById("match-heure").value,
+    type: document.getElementById("match-type").value,
+    titre: document.getElementById("match-titre").value.trim(),
+    lieu: document.getElementById("match-lieu").value.trim(),
+    description: document.getElementById("match-description").value.trim()
+  };
+  const promesse = id ? db.collection("calendrier").doc(id).set(donnees) : db.collection("calendrier").add(donnees);
+  promesse.then(() => {
+    afficherAlerte("alerte-match", "Partie enregistrée.", "ok");
+    reinitialiserFormMatch();
+    chargerCalendrierAdmin();
+  }).catch(() => afficherAlerte("alerte-match", "Erreur lors de l'enregistrement.", "erreur"));
+});
+
+function supprimerMatch(id) {
+  if (!confirm("Supprimer cette partie du calendrier ?")) return;
+  db.collection("calendrier").doc(id).delete().then(chargerCalendrierAdmin);
+}
+
+/* ============================================================
+   Classement (équipes)
+   ============================================================ */
+let equipesData = {};
+db.collection("equipes").onSnapshot(snap => {
+  equipesData = {};
+  snap.forEach(doc => equipesData[doc.id] = doc.data());
+});
+
+function chargerEquipes() {
+  db.collection("equipes").orderBy("pointsAccumules", "desc").get().then(snap => {
+    const zone = document.getElementById("liste-equipes");
+    if (snap.empty) { zone.innerHTML = `<p class="vide">Aucune équipe ajoutée.</p>`; return; }
+    zone.innerHTML = "";
+    snap.forEach(doc => {
+      const d = doc.data();
+      const joueurs = [d.capitaine, d.joueur2, d.joueur3].filter(Boolean).join(", ");
+      zone.insertAdjacentHTML("beforeend", `
+        <div class="ligne-admin">
+          <div class="txt"><strong>Équipe ${echapper(d.numeroEquipe || "")} — ${d.pointsAccumules || 0} pts</strong><span>${echapper(joueurs)}</span></div>
+          <div class="actions-ligne">
+            <button onclick="editerEquipe('${doc.id}')">Modifier</button>
+            <button class="secondaire" onclick="supprimerEquipe('${doc.id}')">Supprimer</button>
+          </div>
+        </div>
+      `);
+    });
+  });
+}
+
+function editerEquipe(id) {
+  const d = equipesData[id];
+  if (!d) return;
+  document.getElementById("equipe-id").value = id;
+  document.getElementById("equipe-numero").value = d.numeroEquipe || "";
+  document.getElementById("equipe-capitaine").value = d.capitaine || "";
+  document.getElementById("equipe-joueur2").value = d.joueur2 || "";
+  document.getElementById("equipe-joueur3").value = d.joueur3 || "";
+  document.getElementById("equipe-pj").value = d.partiesJouees || 0;
+  document.getElementById("equipe-points").value = d.pointsAccumules || 0;
+  document.getElementById("equipe-pour").value = d.pointsPour || 0;
+  document.getElementById("equipe-contre").value = d.pointsContre || 0;
+  document.getElementById("titre-form-equipe").textContent = "Modifier l'équipe";
+  document.getElementById("btn-annuler-equipe").style.display = "inline-block";
+  document.getElementById("onglet-classement").scrollIntoView({behavior:"smooth"});
+}
+
+document.getElementById("btn-annuler-equipe").addEventListener("click", () => reinitialiserFormEquipe());
+function reinitialiserFormEquipe() {
+  document.getElementById("form-equipe").reset();
+  document.getElementById("equipe-id").value = "";
+  document.getElementById("titre-form-equipe").textContent = "Ajouter une équipe";
+  document.getElementById("btn-annuler-equipe").style.display = "none";
+}
+
+document.getElementById("form-equipe").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const id = document.getElementById("equipe-id").value;
+  const donnees = {
+    numeroEquipe: document.getElementById("equipe-numero").value.trim(),
+    capitaine: document.getElementById("equipe-capitaine").value.trim(),
+    joueur2: document.getElementById("equipe-joueur2").value.trim(),
+    joueur3: document.getElementById("equipe-joueur3").value.trim(),
+    partiesJouees: Number(document.getElementById("equipe-pj").value) || 0,
+    pointsAccumules: Number(document.getElementById("equipe-points").value) || 0,
+    pointsPour: Number(document.getElementById("equipe-pour").value) || 0,
+    pointsContre: Number(document.getElementById("equipe-contre").value) || 0
+  };
+  const promesse = id ? db.collection("equipes").doc(id).set(donnees) : db.collection("equipes").add(donnees);
+  promesse.then(() => {
+    afficherAlerte("alerte-equipe", "Équipe enregistrée.", "ok");
+    reinitialiserFormEquipe();
+    chargerEquipes();
+  }).catch(() => afficherAlerte("alerte-equipe", "Erreur lors de l'enregistrement.", "erreur"));
+});
+
+function supprimerEquipe(id) {
+  if (!confirm("Supprimer cette équipe du classement ?")) return;
+  db.collection("equipes").doc(id).delete().then(chargerEquipes);
+}
+
+/* ============================================================
+   Messages (modération)
+   ============================================================ */
+function chargerMessagesAdmin() {
+  db.collection("messages").orderBy("date", "desc").get().then(snap => {
+    const zone = document.getElementById("liste-messages");
+    if (snap.empty) { zone.innerHTML = `<p class="vide">Aucun message.</p>`; return; }
+    zone.innerHTML = "";
+    snap.forEach(doc => {
+      const d = doc.data();
+      zone.insertAdjacentHTML("beforeend", `
+        <div class="ligne-admin">
+          <div class="txt"><strong>${echapper(d.auteur)}</strong><span>${echapper(d.contenu)}</span></div>
+          <div class="actions-ligne">
+            <button class="secondaire" onclick="supprimerMessage('${doc.id}')">Supprimer</button>
+          </div>
+        </div>
+      `);
+    });
+  });
+}
+
+function supprimerMessage(id) {
+  if (!confirm("Supprimer ce message ?")) return;
+  db.collection("messages").doc(id).delete().then(chargerMessagesAdmin);
+}
+</script>
+</body>
+</html>

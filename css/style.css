@@ -1,0 +1,298 @@
+/* ============================================================
+   Club Bouliste Baie-Comeau — feuille de style
+   Palette tirée du maillot du club (rouge/noir) + gris "boule en acier"
+   ============================================================ */
+
+:root{
+  --rouge:        #C8102E;
+  --rouge-fonce:  #8F0B21;
+  --noir:         #141414;
+  --noir-doux:    #1f1f1f;
+  --acier:        #9AA0A6;
+  --acier-clair:  #E4E6E8;
+  --sable:        #EDE4D3;
+  --blanc:        #FFFFFF;
+  --vert-ok:      #2E7D4F;
+  --rouge-neg:    #C8102E;
+
+  --police-titre: "Oswald", "Arial Narrow", sans-serif;
+  --police-texte: "Work Sans", "Segoe UI", sans-serif;
+
+  --rayon: 10px;
+  --ombre: 0 4px 14px rgba(0,0,0,.18);
+}
+
+*{ box-sizing: border-box; }
+html{ scroll-behavior: smooth; }
+
+body{
+  margin:0;
+  font-family: var(--police-texte);
+  background: var(--sable);
+  color: var(--noir);
+  line-height: 1.5;
+}
+
+h1,h2,h3,h4{
+  font-family: var(--police-titre);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: var(--noir);
+  margin: 0 0 .5em;
+}
+
+a{ color: var(--rouge); text-decoration:none; }
+a:hover{ text-decoration: underline; }
+
+img{ max-width:100%; display:block; }
+
+button, .btn{
+  font-family: var(--police-titre);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  border:none;
+  border-radius: var(--rayon);
+  padding: .7em 1.4em;
+  background: var(--rouge);
+  color: var(--blanc);
+  cursor:pointer;
+  font-size: .9rem;
+  transition: transform .12s ease, background .12s ease;
+}
+button:hover, .btn:hover{ background: var(--rouge-fonce); transform: translateY(-1px); }
+button.secondaire, .btn.secondaire{ background: var(--noir); }
+button.secondaire:hover{ background:#000; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible{
+  outline: 3px solid var(--acier);
+  outline-offset: 2px;
+}
+
+input, textarea, select{
+  font-family: var(--police-texte);
+  padding:.6em .8em;
+  border:1px solid #c9c1ac;
+  border-radius: 6px;
+  width:100%;
+  background: var(--blanc);
+}
+
+/* ---------- Bandeau piste (signature graphique) ----------
+   Motif de trajectoire de boule : une ligne pointillée qui
+   courbe vers un rond plein (le cochonnet). Utilisé comme
+   séparateur de sections plutôt qu'un simple <hr>. */
+.piste{
+  height: 26px;
+  margin: 2.2rem 0;
+  background:
+    radial-gradient(circle 5px at 96% 50%, var(--rouge) 98%, transparent 100%),
+    repeating-linear-gradient(90deg, var(--acier) 0 10px, transparent 10px 22px);
+  background-repeat: no-repeat, repeat-x;
+  background-position: right center, left 6px center;
+  background-size: auto, auto;
+  opacity:.55;
+}
+
+/* ---------- Entête / navigation ---------- */
+header.entete{
+  background: var(--noir);
+  color: var(--blanc);
+  position: sticky; top:0; z-index: 50;
+  box-shadow: var(--ombre);
+}
+.entete-inner{
+  max-width: 1180px; margin:0 auto;
+  display:flex; align-items:center; justify-content:space-between;
+  padding: .6rem 1.2rem;
+  gap: 1rem;
+}
+.marque{ display:flex; align-items:center; gap:.7rem; }
+.marque img{ height: 42px; width:auto; border-radius: 4px; }
+.marque .txt{ font-family: var(--police-titre); text-transform:uppercase; line-height:1.05; }
+.marque .txt b{ color: var(--rouge); display:block; font-size:1.05rem; letter-spacing:.04em; }
+.marque .txt span{ font-size:.68rem; color: var(--acier-clair); letter-spacing:.12em; }
+
+nav.principale{ display:flex; gap: .3rem; flex-wrap:wrap; }
+nav.principale a{
+  color: var(--acier-clair);
+  font-family: var(--police-titre);
+  text-transform: uppercase;
+  font-size:.82rem;
+  letter-spacing:.05em;
+  padding:.5rem .7rem;
+  border-radius: 6px;
+}
+nav.principale a:hover, nav.principale a.actif{
+  background: var(--rouge);
+  color:#fff;
+  text-decoration:none;
+}
+#btn-burger{ display:none; background:transparent; padding:.4rem; }
+#btn-burger span, #btn-burger span::before, #btn-burger span::after{
+  content:""; display:block; width:24px; height:2px; background:#fff; margin:5px 0; position:relative;
+}
+
+@media (max-width: 820px){
+  nav.principale{
+    display:none;
+    position:absolute; top:100%; left:0; right:0;
+    background: var(--noir);
+    flex-direction:column; padding:.5rem 1rem 1rem;
+  }
+  nav.principale.ouvert{ display:flex; }
+  #btn-burger{ display:block; }
+}
+
+/* ---------- Hero ---------- */
+.hero{
+  position:relative;
+  color:#fff;
+  background: linear-gradient(160deg, var(--noir) 0%, var(--noir-doux) 55%, var(--rouge-fonce) 130%);
+  padding: 3.4rem 1.2rem 3rem;
+  overflow:hidden;
+}
+.hero::before{
+  /* Anneaux du cochonnet — motif cible en fond, discret */
+  content:"";
+  position:absolute; right:-90px; top:50%; transform:translateY(-50%);
+  width:420px; height:420px;
+  border-radius:50%;
+  border: 2px solid rgba(255,255,255,.06);
+  box-shadow:
+    0 0 0 40px rgba(255,255,255,.045) inset,
+    0 0 0 80px rgba(255,255,255,.03) inset,
+    0 0 0 120px rgba(255,255,255,.02) inset;
+  pointer-events:none;
+}
+.hero-inner{ max-width: 1180px; margin:0 auto; position:relative; z-index:2; }
+.hero .eyebrow{
+  font-family: var(--police-titre);
+  color: var(--acier-clair);
+  letter-spacing:.18em; text-transform:uppercase; font-size:.75rem;
+  margin-bottom:.6rem;
+}
+.hero h1{ color:#fff; font-size: clamp(1.8rem, 4vw, 3rem); max-width: 720px; margin-bottom:.5rem;}
+.hero p.lead{ max-width: 620px; color: var(--acier-clair); font-size:1.05rem; }
+.hero .actions{ margin-top:1.4rem; display:flex; gap:.8rem; flex-wrap:wrap; }
+
+/* ---------- Structure générale ---------- */
+main{ max-width: 1180px; margin: 0 auto; padding: 2.4rem 1.2rem 4rem; }
+section{ margin-bottom: 2.6rem; }
+.section-tete{ display:flex; align-items:baseline; justify-content:space-between; gap:1rem; flex-wrap:wrap; margin-bottom:1rem;}
+.section-tete p{ color:#555; margin:0; }
+
+.grille{ display:grid; gap: 1.1rem; }
+.grille.cols-2{ grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); }
+.grille.cols-3{ grid-template-columns: repeat(auto-fit, minmax(230px,1fr)); }
+.grille.cols-4{ grid-template-columns: repeat(auto-fit, minmax(190px,1fr)); }
+
+.carte{
+  background: var(--blanc);
+  border-radius: var(--rayon);
+  box-shadow: var(--ombre);
+  padding: 1.2rem;
+  border-top: 4px solid var(--rouge);
+}
+.carte h3{ font-size: 1rem; margin-bottom:.3rem; }
+
+/* ---------- Fiches joueurs ---------- */
+.carte-joueur{
+  background:#fff; border-radius: var(--rayon); overflow:hidden;
+  box-shadow: var(--ombre); cursor:pointer; text-align:center;
+  border-bottom: 4px solid var(--rouge);
+  transition: transform .12s ease;
+}
+.carte-joueur:hover{ transform: translateY(-3px); }
+.carte-joueur .photo{
+  width:100%; aspect-ratio:1/1; object-fit:cover;
+  background: var(--noir);
+}
+.carte-joueur .photo.vide{
+  display:flex; align-items:center; justify-content:center;
+  color: var(--acier-clair); font-family:var(--police-titre); font-size:2.2rem;
+}
+.carte-joueur .infos{ padding:.9rem .6rem 1.1rem; }
+.carte-joueur .nom{ font-family:var(--police-titre); text-transform:uppercase; font-size:1rem; }
+.carte-joueur .role{ color: var(--rouge); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; }
+
+/* ---------- Tableaux (classement, calendrier) ---------- */
+.table-scroll{ overflow-x:auto; background:#fff; border-radius: var(--rayon); box-shadow: var(--ombre); }
+table.classement{ width:100%; border-collapse:collapse; min-width: 720px; }
+table.classement th, table.classement td{
+  padding:.6rem .7rem; text-align:center; border-bottom:1px solid #eee; font-size:.9rem;
+}
+table.classement th{
+  background: var(--noir); color:#fff;
+  font-family: var(--police-titre); text-transform:uppercase; font-size:.75rem; letter-spacing:.04em;
+  position: sticky; top:0;
+}
+table.classement td.joueurs{ text-align:left; }
+table.classement tr:nth-child(1) td.rang{ color: var(--rouge); font-weight:700; }
+table.classement td.diff.positif{ color: var(--vert-ok); font-weight:700; }
+table.classement td.diff.negatif{ background: #fdeceb; color: var(--rouge-neg); font-weight:700; }
+table.classement tbody tr:hover{ background: #faf7f0; }
+
+/* ---------- Calendrier (cartes de match) ---------- */
+.match{
+  display:flex; gap:1rem; align-items:center;
+  background:#fff; border-radius: var(--rayon); box-shadow: var(--ombre);
+  padding: .9rem 1.1rem; border-left:4px solid var(--rouge);
+}
+.match .date-bloc{
+  background: var(--noir); color:#fff; border-radius:8px;
+  min-width:64px; text-align:center; padding:.5rem .3rem;
+  font-family: var(--police-titre);
+}
+.match .date-bloc .jour{ font-size:1.3rem; line-height:1; }
+.match .date-bloc .mois{ font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; }
+.match .detail{ flex:1; }
+.match .detail .type{ font-size:.72rem; text-transform:uppercase; color: var(--rouge); letter-spacing:.06em; }
+.match .detail h4{ margin:.15rem 0; font-size:1.02rem; }
+.match .detail .lieu{ color:#555; font-size:.85rem; }
+
+/* ---------- Messagerie ---------- */
+.message{
+  background:#fff; border-radius: var(--rayon); box-shadow: var(--ombre);
+  padding:1rem 1.1rem; border-left:4px solid var(--acier);
+}
+.message .entete-msg{ display:flex; justify-content:space-between; font-size:.78rem; color:#666; margin-bottom:.4rem; }
+.message .entete-msg .auteur{ font-family:var(--police-titre); color:var(--noir); font-size:.85rem; }
+
+/* ---------- Fiche joueur (modale) ---------- */
+.fond-modale{
+  position:fixed; inset:0; background:rgba(20,20,20,.72);
+  display:none; align-items:center; justify-content:center; z-index:200; padding:1rem;
+}
+.fond-modale.ouverte{ display:flex; }
+.modale{
+  background:#fff; border-radius: var(--rayon); max-width:520px; width:100%;
+  max-height:88vh; overflow:auto; position:relative;
+}
+.modale .fermer{
+  position:absolute; top:.6rem; right:.6rem; background:var(--noir);
+  width:34px; height:34px; border-radius:50%; color:#fff; font-size:1.1rem; padding:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.modale .photo-tete{ width:100%; aspect-ratio: 16/9; object-fit:cover; background:var(--noir); }
+.modale .contenu{ padding:1.2rem 1.4rem 1.6rem; }
+.modale .role{ color:var(--rouge); text-transform:uppercase; font-size:.78rem; letter-spacing:.06em; }
+
+/* ---------- Pied de page ---------- */
+footer{
+  background: var(--noir); color: var(--acier-clair);
+  padding: 2rem 1.2rem; text-align:center; font-size:.85rem;
+}
+footer a{ color:#fff; }
+
+/* ---------- Utilitaires ---------- */
+.badge{
+  display:inline-block; background:var(--acier-clair); color:var(--noir);
+  border-radius:20px; padding:.15rem .7rem; font-size:.72rem;
+  font-family:var(--police-titre); text-transform:uppercase; letter-spacing:.04em;
+}
+.vide{ text-align:center; color:#777; padding:2.4rem 1rem; }
+.vide .btn{ margin-top:.8rem; }
+.champ{ margin-bottom:.9rem; }
+.champ label{ display:block; font-size:.82rem; font-family:var(--police-titre); text-transform:uppercase; letter-spacing:.03em; margin-bottom:.3rem; }
+.alerte{ padding:.7rem 1rem; border-radius:8px; font-size:.88rem; margin-bottom:1rem; }
+.alerte.erreur{ background:#fdeceb; color:var(--rouge-neg); border:1px solid #f3c3bd; }
+.alerte.ok{ background:#e8f4ec; color:var(--vert-ok); border:1px solid #bfe2cb; }
