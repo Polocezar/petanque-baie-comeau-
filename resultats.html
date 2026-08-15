@@ -98,9 +98,11 @@ db.collection("equipes").orderBy("pointsAccumules", "desc").get().then(snap => {
   snap.forEach(doc => {
     const d = doc.data();
     const diff = (d.pointsPour || 0) - (d.pointsContre || 0);
+    const classePodium = rang === 1 ? "or" : rang === 2 ? "argent" : rang === 3 ? "bronze" : "";
+    const medaille = classePodium ? `<span class="medaille ${classePodium}">${rang}</span>` : rang;
     corps.insertAdjacentHTML("beforeend", `
-      <tr>
-        <td class="rang">${rang}</td>
+      <tr class="${classePodium}">
+        <td class="rang">${medaille}</td>
         <td>${d.partiesJouees || 0}</td>
         <td><strong>${d.pointsAccumules || 0}</strong></td>
         <td>${echapper(d.numeroEquipe || rang)}</td>
