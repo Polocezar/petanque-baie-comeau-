@@ -174,9 +174,11 @@ db.collection("equipes").orderBy("pointsAccumules", "desc").limit(5).get().then(
     const d = doc.data();
     const diff = (d.pointsPour || 0) - (d.pointsContre || 0);
     const joueurs = [d.capitaine, d.joueur2, d.joueur3].filter(Boolean).join(", ");
+    const classePodium = rang === 1 ? "or" : rang === 2 ? "argent" : rang === 3 ? "bronze" : "";
+    const medaille = classePodium ? `<span class="medaille ${classePodium}">${rang}</span>` : rang;
     tbody.insertAdjacentHTML("beforeend", `
-      <tr>
-        <td class="rang">${rang}</td>
+      <tr class="${classePodium}">
+        <td class="rang">${medaille}</td>
         <td>${echapper(d.nomEquipe || ("Équipe " + rang))}</td>
         <td class="joueurs">${echapper(joueurs)}</td>
         <td>${d.partiesJouees || 0}</td>
