@@ -1,40 +1,89 @@
 /* ============================================================
-   Club Bouliste Baie-Comeau — feuille de style
-   Palette tirée du maillot du club (rouge/noir) + gris "boule en acier"
+   Fonctions communes — Club Bouliste Baie-Comeau
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600;700&family=Work+Sans:wght@400;500;600&display=swap');
+// Menu burger (mobile)
+document.addEventListener("DOMContentLoaded", () => {
+  const burger = document.getElementById("btn-burger");
+  const nav = document.querySelector("nav.principale");
+  if (burger && nav) {
+    burger.addEventListener("click", () => nav.classList.toggle("ouvert"));
+  }
 
-:root{
-  --rouge:        #C8102E;
-  --rouge-vif:    #E01438;
-  --rouge-fonce:  #8F0B21;
-  --noir:         #141414;
-  --noir-doux:    #1f1f1f;
-  --acier:        #9AA0A6;
-  --acier-clair:  #E4E6E8;
-  --sable:        #EDE4D3;
-  --blanc:        #FFFFFF;
-  --vert-ok:      #2E7D4F;
-  --rouge-neg:    #C8102E;
-  --or:           #D4AF37;
-  --argent:       #A9A9AE;
-  --bronze:       #B0703A;
+  const page = location.pathname.split("/").pop() || "index.html";
+  document.querySelectorAll("nav.principale a").forEach(a => {
+    if (a.getAttribute("href") === page) a.classList.add("actif");
+  });
+});
 
-  --police-affiche: "Anton", "Oswald", "Arial Narrow", sans-serif;
-  --police-titre: "Oswald", "Arial Narrow", sans-serif;
-  --police-texte: "Work Sans", "Segoe UI", sans-serif;
-
-  --rayon: 14px;
-  --ombre: 0 6px 20px rgba(20,14,10,.12);
-  --ombre-forte: 0 16px 34px rgba(20,14,10,.2);
+function echapper(txt) {
+  if (txt === undefined || txt === null) return "";
+  const div = document.createElement("div");
+  div.textContent = txt;
+  return div.innerHTML;
 }
 
-*{ box-sizing: border-box; }
-html{ scroll-behavior: smooth; }
+if (typeof auth !== "undefined") {
+  auth.onAuthStateChanged(user => {
+    const c = document.getElementById("lien-connexion");
+    const i = document.getElementById("lien-inscription");
+    const d = document.getElementById("lien-deconnexion");
+    if (c) c.style.display = user ? "none" : "";
+    if (i) i.style.display = user ? "none" : "";
+    if (d) {
+      d.style.display = user ? "" : "none";
+      d.onclick = (e) => { e.preventDefault(); auth.signOut().then(() => location.href = "index.html"); };
+    }
+  });
+}
 
-body{
-  margin:0;
-  font-family: var(--police-texte);
-  color: var(--noir);
-  line-height: 1.5;
+function formaterDate(iso) {
+  if (!iso) return "";
+  const mois = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+  const [a, m, j] = iso.split("-").map(Number);
+  return `${j} ${mois[m - 1]} ${a}`;
+}
+
+function formaterDateBloc(iso) {
+  const moisCourt = ["JAN","FÉV","MAR","AVR","MAI","JUIN","JUIL","AOÛT","SEP","OCT","NOV","DÉC"];
+  const [a, m, j] = iso.split("-").map(Number);
+  return { jour: j, mois: moisCourt[m - 1] };
+}
+
+function afficherAlerte(conteneurId, message, type = "ok") {
+  const conteneur = document.getElementById(conteneurId);
+  if (!conteneur) return;
+  conteneur.innerHTML = `<div class="alerte ${type}">${echapper(message)}</div>`;
+  if (type === "ok") setTimeout(() => { conteneur.innerHTML = ""; }, 4000);
+}
+
+const observateurScroll = ("IntersectionObserver" in window)
+  ? new IntersectionObserver((entrees) => {
+      entrees.forEach(entree => {
+        if (entree.isIntersecting) {
+          entree.target.classList.add("visible");
+          observateurScroll.unobserve(entree.target);
+        }
+      });
+    }, { threshold: .12 })
+  : null;
+
+function activerRevelationScroll(conteneur) {
+  if (!observateurScroll) return;
+  const racine = conteneur || document;
+  racine.querySelectorAll(".carte, .carte-joueur, .match, .message").forEach(el => {
+    if (el.dataset.revele) return;
+    el.dataset.revele = "1";
+    el.classList.add("au-scroll");
+    observateurScroll.observe(el);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  activerRevelationScroll();
+  const main = document.querySelector("main");
+  if (main && "MutationObserver" in window) {
+    const observateurMutation = new MutationObserver(() => activerRevelationScroll(main));
+    observateurMutation.observe(main, { childList: true, subtree: true });
+  }
+});
