@@ -227,7 +227,7 @@ auth.onAuthStateChanged(user => {
     document.getElementById("ecran-admin").style.display = "none";
     return;
   }
-  db.collection("admins").doc(user.uid).get().then(doc => {
+  db.collection("admin").doc(user.uid).get().then(doc => {
     if (doc.exists) {
       document.getElementById("ecran-connexion").style.display = "none";
       document.getElementById("ecran-admin").style.display = "block";
