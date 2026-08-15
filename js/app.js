@@ -25,6 +25,25 @@ function echapper(txt) {
   return div.innerHTML;
 }
 
+// Affiche/masque les liens Connexion / Inscription / Déconnexion selon l'état de connexion.
+// À placer dans la nav de chaque page publique :
+//   <a href="connexion.html" id="lien-connexion">Connexion</a>
+//   <a href="inscription.html" id="lien-inscription">Inscription</a>
+//   <a href="#" id="lien-deconnexion" style="display:none;">Déconnexion</a>
+if (typeof auth !== "undefined") {
+  auth.onAuthStateChanged(user => {
+    const c = document.getElementById("lien-connexion");
+    const i = document.getElementById("lien-inscription");
+    const d = document.getElementById("lien-deconnexion");
+    if (c) c.style.display = user ? "none" : "";
+    if (i) i.style.display = user ? "none" : "";
+    if (d) {
+      d.style.display = user ? "" : "none";
+      d.onclick = (e) => { e.preventDefault(); auth.signOut().then(() => location.href = "index.html"); };
+    }
+  });
+}
+
 // Formate une date ISO (2026-04-14) en "14 avril 2026"
 function formaterDate(iso) {
   if (!iso) return "";

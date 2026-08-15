@@ -22,6 +22,9 @@
       <a href="calendrier.html">Calendrier</a>
       <a href="resultats.html">Résultats &amp; classement</a>
       <a href="messagerie.html">Messagerie</a>
+      <a href="connexion.html" id="lien-connexion">Connexion</a>
+      <a href="inscription.html" id="lien-inscription">Inscription</a>
+      <a href="#" id="lien-deconnexion" style="display:none;">Déconnexion</a>
     </nav>
   </div>
 </header>
@@ -70,7 +73,7 @@
 <script>
 let joueursCache = {};
 
-db.collection("joueurs").orderBy("nom", "asc").get().then(snap => {
+db.collection("joueurs").where("statut", "==", "approuve").orderBy("nom", "asc").get().then(snap => {
   const zone = document.getElementById("zone-effectif");
   if (snap.empty) {
     zone.innerHTML = `<p class="vide">Aucun joueur n'a encore été ajouté à l'effectif.<br>Rendez-vous dans l'espace admin pour les ajouter.</p>`;

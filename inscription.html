@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inscription — Club Bouliste Baie-Comeau</title>
+<link rel="icon" href="assets/logo-club.jpeg">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="entete">
+  <div class="entete-inner">
+    <a class="marque" href="index.html">
+      <img src="assets/logo-club.jpeg" alt="Logo Club Bouliste Baie-Comeau">
+      <span class="txt"><b>Club Bouliste</b><span>Baie-Comeau</span></span>
+    </a>
+    <button id="btn-burger" aria-label="Ouvrir le menu"><span></span></button>
+    <nav class="principale">
+      <a href="index.html">Accueil</a>
+      <a href="effectif.html">Effectif</a>
+      <a href="calendrier.html">Calendrier</a>
+      <a href="resultats.html">Résultats &amp; classement</a>
+      <a href="messagerie.html">Messagerie</a>
+      <a href="connexion.html" id="lien-connexion">Connexion</a>
+      <a href="inscription.html" id="lien-inscription">Inscription</a>
+      <a href="#" id="lien-deconnexion" style="display:none;">Déconnexion</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" style="padding:2.4rem 1.2rem;">
+  <div class="hero-inner">
+    <div class="eyebrow">Rejoindre le club</div>
+    <h1>Inscription</h1>
+    <p class="lead">Remplissez votre fiche pour rejoindre le club. Votre inscription sera examinée par l'administrateur avant d'être activée.</p>
+  </div>
+</section>
+
+<main>
+  <section>
+    <div class="carte" style="max-width:640px;">
+      <div id="alerte-inscription"></div>
+
+      <form id="form-inscription">
+        <div class="champ"><label for="ins-prenom">Prénom</label><input type="text" id="ins-prenom" required></div>
+        <div class="champ"><label for="ins-nom">Nom</label><input type="text" id="ins-nom" required></div>
+        <div class="champ"><label for="ins-telephone">Téléphone</label><input type="tel" id="ins-telephone"></div>
+        <div class="champ"><label for="ins-email">Adresse e-mail</label><input type="email" id="ins-email" required></div>
+        <div class="champ"><label for="ins-mdp">Mot de passe</label><input type="password" id="ins-mdp" minlength="6" required></div>
+        <div class="champ"><label for="ins-mdp2">Confirmer le mot de passe</label><input type="password" id="ins-mdp2" minlength="6" required></div>
+        <div class="champ"><label for="ins-bio">Présentation (facultatif)</label><textarea id="ins-bio" rows="3"></textarea></div>
+        <button type="submit">Envoyer ma demande d'inscription</button>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p><strong>Club Bouliste Baie-Comeau</strong> — Boulodrome sur sable, sous-sol</p>
+  <p>Déjà membre ? <a href="connexion.html">Connectez-vous</a> — <a href="admin.html">Espace administration</a></p>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/app.js"></script>
+<script>
+document.getElementById("form-inscription").addEventListener("submit", (e) => {
+  e.preventDefault();
+
+  const prenom = document.getElementById("ins-prenom").value.trim();
+  const nom = document.getElementById("ins-nom").value.trim();
+  const telephone = document.getElementById("ins-telephone").value.trim();
+  const email = document.getElementById("ins-email").value.trim();
+  const mdp = document.getElementById("ins-mdp").value;
+  const mdp2 = document.getElementById("ins-mdp2").value;
+  const bio = document.getElementById("ins-bio").value.trim();
+
+  if (mdp !== mdp2) {
+    afficherAlerte("alerte-inscription", "Les deux mots de passe ne correspondent pas.", "erreur");
+    return;
+  }
+
+  const bouton = e.target.querySelector("button");
+  bouton.disabled = true;
+  bouton.textContent = "Envoi en cours…";
+
+  auth.createUserWithEmailAndPassword(email, mdp)
+    .then(cred => {
+      return db.collection("joueurs").doc(cred.user.uid).set({
+        prenom, nom, telephone, email, bio,
+        role: "Joueur",
+        statut: "en_attente",
+        dateArrivee: new Date().toISOString().slice(0,10)
+      }).then(() => auth.signOut());
+    })
+    .then(() => {
+      document.getElementById("form-inscription").reset();
+      document.getElementById("form-inscription").style.display = "none";
+      document.getElementById("alerte-inscription").innerHTML =
+        `<div class="alerte ok">Votre demande d'inscription a bien été envoyée ! Elle sera activée dès validation par l'administrateur du club.</div>`;
+    })
+    .catch(err => {
+      let message = "Impossible d'envoyer l'inscription. Réessayez.";
+      if (err.code === "auth/email-already-in-use") message = "Cette adresse e-mail est déjà utilisée. Essayez de vous connecter à la place.";
+      if (err.code === "auth/weak-password") message = "Le mot de passe doit contenir au moins 6 caractères.";
+      afficherAlerte("alerte-inscription", message, "erreur");
+    })
+    .finally(() => {
+      bouton.disabled = false;
+      bouton.textContent = "Envoyer ma demande d'inscription";
+    });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connexion — Club Bouliste Baie-Comeau</title>
+<link rel="icon" href="assets/logo-club.jpeg">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="entete">
+  <div class="entete-inner">
+    <a class="marque" href="index.html">
+      <img src="assets/logo-club.jpeg" alt="Logo Club Bouliste Baie-Comeau">
+      <span class="txt"><b>Club Bouliste</b><span>Baie-Comeau</span></span>
+    </a>
+    <button id="btn-burger" aria-label="Ouvrir le menu"><span></span></button>
+    <nav class="principale">
+      <a href="index.html">Accueil</a>
+      <a href="effectif.html">Effectif</a>
+      <a href="calendrier.html">Calendrier</a>
+      <a href="resultats.html">Résultats &amp; classement</a>
+      <a href="messagerie.html">Messagerie</a>
+      <a href="connexion.html" id="lien-connexion">Connexion</a>
+      <a href="inscription.html" id="lien-inscription">Inscription</a>
+      <a href="#" id="lien-deconnexion" style="display:none;">Déconnexion</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" style="padding:2.4rem 1.2rem;">
+  <div class="hero-inner">
+    <div class="eyebrow">Espace membres</div>
+    <h1>Connexion</h1>
+    <p class="lead">Connectez-vous pour accéder à la messagerie du club.</p>
+  </div>
+</section>
+
+<main>
+  <section>
+    <div class="carte" style="max-width:420px;">
+      <div id="alerte-connexion"></div>
+      <form id="form-connexion">
+        <div class="champ"><label for="champ-email">Adresse e-mail</label><input type="email" id="champ-email" required></div>
+        <div class="champ"><label for="champ-mdp">Mot de passe</label><input type="password" id="champ-mdp" required></div>
+        <button type="submit">Se connecter</button>
+      </form>
+      <p style="margin-top:1rem; font-size:.9rem;">Pas encore membre ? <a href="inscription.html">Inscrivez-vous</a></p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p><strong>Club Bouliste Baie-Comeau</strong> — Boulodrome sur sable, sous-sol</p>
+  <p><a href="admin.html">Espace administration</a></p>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/app.js"></script>
+<script>
+document.getElementById("form-connexion").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const email = document.getElementById("champ-email").value.trim();
+  const mdp = document.getElementById("champ-mdp").value;
+  const bouton = e.target.querySelector("button");
+  bouton.disabled = true;
+  bouton.textContent = "Connexion…";
+
+  auth.signInWithEmailAndPassword(email, mdp)
+    .then(cred => db.collection("joueurs").doc(cred.user.uid).get().then(doc => {
+      if (doc.exists && doc.data().statut === "approuve") {
+        location.href = "messagerie.html";
+      } else if (doc.exists && doc.data().statut === "en_attente") {
+        afficherAlerte("alerte-connexion", "Votre inscription est encore en attente de validation par l'administrateur.", "erreur");
+        auth.signOut();
+      } else {
+        // Compte connecté sans fiche joueur (ex: compte admin) : on laisse passer vers l'accueil
+        location.href = "index.html";
+      }
+    }))
+    .catch(() => {
+      afficherAlerte("alerte-connexion", "E-mail ou mot de passe incorrect.", "erreur");
+    })
+    .finally(() => {
+      bouton.disabled = false;
+      bouton.textContent = "Se connecter";
+    });
+});
+</script>
+</body>
+</html>

@@ -40,6 +40,9 @@
       <a href="calendrier.html">Calendrier</a>
       <a href="resultats.html">Résultats &amp; classement</a>
       <a href="messagerie.html">Messagerie</a>
+      <a href="connexion.html" id="lien-connexion">Connexion</a>
+      <a href="inscription.html" id="lien-inscription">Inscription</a>
+      <a href="#" id="lien-deconnexion" style="display:none;">Déconnexion</a>
     </nav>
   </div>
 </header>
@@ -75,6 +78,7 @@
 
     <div class="onglets">
       <button data-cible="onglet-infos" class="actif">Infos du club</button>
+      <button data-cible="onglet-inscriptions">Inscriptions à valider</button>
       <button data-cible="onglet-joueurs">Effectif</button>
       <button data-cible="onglet-calendrier">Calendrier</button>
       <button data-cible="onglet-classement">Classement</button>
@@ -105,8 +109,15 @@
       </div>
     </div>
 
+    <!-- ---- Inscriptions ---- -->
+    <div class="panneau" id="onglet-inscriptions">
+      <p>Demandes d'inscription envoyées par les joueurs depuis la page « Inscription », en attente de votre validation.</p>
+      <div id="liste-inscriptions" class="liste-admin"></div>
+    </div>
+
     <!-- ---- Joueurs ---- -->
     <div class="panneau" id="onglet-joueurs">
+      <p style="color:#666; font-size:.9rem;">Les joueurs listés ici sont ceux déjà validés (ou ajoutés directement par vous). Les nouvelles demandes d'inscription se trouvent dans l'onglet « Inscriptions à valider ».</p>
       <div class="carte">
         <h3 id="titre-form-joueur">Ajouter un joueur</h3>
         <div id="alerte-joueur"></div>
@@ -211,9 +222,24 @@
    Connexion / déconnexion
    ============================================================ */
 auth.onAuthStateChanged(user => {
-  document.getElementById("ecran-connexion").style.display = user ? "none" : "block";
-  document.getElementById("ecran-admin").style.display = user ? "block" : "none";
-  if (user) chargerTout();
+  if (!user) {
+    document.getElementById("ecran-connexion").style.display = "block";
+    document.getElementById("ecran-admin").style.display = "none";
+    return;
+  }
+  db.collection("admins").doc(user.uid).get().then(doc => {
+    if (doc.exists) {
+      document.getElementById("ecran-connexion").style.display = "none";
+      document.getElementById("ecran-admin").style.display = "block";
+      chargerTout();
+    } else {
+      afficherAlerte("alerte-connexion", "Ce compte n'a pas les droits d'administration.", "erreur");
+      auth.signOut();
+    }
+  }).catch(() => {
+    afficherAlerte("alerte-connexion", "Impossible de vérifier les droits d'administration.", "erreur");
+    auth.signOut();
+  });
 });
 
 document.getElementById("form-connexion").addEventListener("submit", (e) => {
@@ -241,6 +267,7 @@ document.querySelectorAll(".onglets button").forEach(bouton => {
 
 function chargerTout() {
   chargerInfos();
+  chargerInscriptions();
   chargerJoueurs();
   chargerCalendrierAdmin();
   chargerEquipes();
@@ -287,14 +314,59 @@ document.getElementById("form-ligue").addEventListener("submit", (e) => {
 });
 
 /* ============================================================
+   Inscriptions en attente
+   ============================================================ */
+function chargerInscriptions() {
+  db.collection("joueurs").where("statut", "==", "en_attente").get().then(snap => {
+    const zone = document.getElementById("liste-inscriptions");
+    const compteurOnglet = document.querySelector('[data-cible="onglet-inscriptions"]');
+    if (snap.empty) {
+      zone.innerHTML = `<p class="vide">Aucune demande d'inscription en attente.</p>`;
+      if (compteurOnglet) compteurOnglet.textContent = "Inscriptions à valider";
+      return;
+    }
+    if (compteurOnglet) compteurOnglet.textContent = `Inscriptions à valider (${snap.size})`;
+    zone.innerHTML = "";
+    snap.forEach(doc => {
+      const d = doc.data();
+      zone.insertAdjacentHTML("beforeend", `
+        <div class="ligne-admin">
+          <div class="txt">
+            <strong>${echapper(d.prenom)} ${echapper(d.nom)}</strong>
+            <span>${echapper(d.email || "")}${d.telephone ? " · " + echapper(d.telephone) : ""}</span>
+          </div>
+          <div class="actions-ligne">
+            <button onclick="approuverInscription('${doc.id}')">Approuver</button>
+            <button class="secondaire" onclick="refuserInscription('${doc.id}')">Refuser</button>
+          </div>
+        </div>
+      `);
+    });
+  });
+}
+
+function approuverInscription(id) {
+  db.collection("joueurs").doc(id).update({ statut: "approuve" }).then(() => {
+    chargerInscriptions();
+    chargerJoueurs();
+  });
+}
+
+function refuserInscription(id) {
+  if (!confirm("Refuser et supprimer cette demande d'inscription ?")) return;
+  db.collection("joueurs").doc(id).delete().then(chargerInscriptions);
+}
+
+/* ============================================================
    Joueurs (effectif)
    ============================================================ */
 function chargerJoueurs() {
   db.collection("joueurs").orderBy("nom", "asc").get().then(snap => {
     const zone = document.getElementById("liste-joueurs");
-    if (snap.empty) { zone.innerHTML = `<p class="vide">Aucun joueur ajouté.</p>`; return; }
+    const joueursValides = snap.docs.filter(doc => doc.data().statut !== "en_attente");
+    if (joueursValides.length === 0) { zone.innerHTML = `<p class="vide">Aucun joueur ajouté.</p>`; return; }
     zone.innerHTML = "";
-    snap.forEach(doc => {
+    joueursValides.forEach(doc => {
       const d = doc.data();
       zone.insertAdjacentHTML("beforeend", `
         <div class="ligne-admin">
@@ -351,7 +423,8 @@ document.getElementById("form-joueur").addEventListener("submit", (e) => {
     telephone: document.getElementById("joueur-telephone").value.trim(),
     email: document.getElementById("joueur-email").value.trim(),
     photoUrl: document.getElementById("joueur-photo").value.trim(),
-    bio: document.getElementById("joueur-bio").value.trim()
+    bio: document.getElementById("joueur-bio").value.trim(),
+    statut: "approuve"
   };
   const promesse = id ? db.collection("joueurs").doc(id).set(donnees) : db.collection("joueurs").add(donnees);
   promesse.then(() => {

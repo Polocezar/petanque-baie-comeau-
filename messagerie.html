@@ -22,6 +22,9 @@
       <a href="calendrier.html">Calendrier</a>
       <a href="resultats.html">Résultats &amp; classement</a>
       <a href="messagerie.html">Messagerie</a>
+      <a href="connexion.html" id="lien-connexion">Connexion</a>
+      <a href="inscription.html" id="lien-inscription">Inscription</a>
+      <a href="#" id="lien-deconnexion" style="display:none;">Déconnexion</a>
     </nav>
   </div>
 </header>
@@ -39,11 +42,21 @@
     <div class="carte" style="max-width:640px;">
       <h3>Laisser un message</h3>
       <div id="alerte-message"></div>
-      <form id="form-message">
-        <div class="champ">
-          <label for="champ-auteur">Votre nom</label>
-          <input type="text" id="champ-auteur" required maxlength="60">
+
+      <div id="bloc-non-connecte">
+        <p>La messagerie est réservée aux membres du club.</p>
+        <div style="display:flex; gap:.6rem; flex-wrap:wrap;">
+          <a class="btn" href="connexion.html">Se connecter</a>
+          <a class="btn secondaire" href="inscription.html">S'inscrire</a>
         </div>
+      </div>
+
+      <div id="bloc-en-attente" style="display:none;">
+        <p>Votre inscription est encore en attente de validation par l'administrateur du club. Vous pourrez publier des messages dès qu'elle sera approuvée.</p>
+      </div>
+
+      <form id="form-message" style="display:none;">
+        <p id="ecrit-en-tant-que" style="color:#666; font-size:.85rem;"></p>
         <div class="champ">
           <label for="champ-contenu">Message</label>
           <textarea id="champ-contenu" rows="3" required maxlength="600"></textarea>
@@ -98,19 +111,53 @@ function chargerMessages() {
     zone.innerHTML = `<p class="vide">Impossible de charger les messages pour le moment.</p>`;
   });
 }
+chargerMessages();
+
+// ---------- Accès au formulaire selon l'état du compte ----------
+let nomAuteurCourant = "";
+
+auth.onAuthStateChanged(user => {
+  const blocNonConnecte = document.getElementById("bloc-non-connecte");
+  const blocEnAttente = document.getElementById("bloc-en-attente");
+  const formulaire = document.getElementById("form-message");
+
+  blocNonConnecte.style.display = "none";
+  blocEnAttente.style.display = "none";
+  formulaire.style.display = "none";
+
+  if (!user) {
+    blocNonConnecte.style.display = "block";
+    return;
+  }
+
+  db.collection("joueurs").doc(user.uid).get().then(doc => {
+    if (doc.exists && doc.data().statut === "approuve") {
+      const d = doc.data();
+      nomAuteurCourant = `${d.prenom} ${d.nom}`;
+      document.getElementById("ecrit-en-tant-que").textContent = `Vous écrivez en tant que ${nomAuteurCourant}`;
+      formulaire.style.display = "block";
+    } else if (doc.exists && doc.data().statut === "en_attente") {
+      blocEnAttente.style.display = "block";
+    } else {
+      // Compte connecté sans fiche joueur (ex : compte admin) : peut publier sous son e-mail
+      nomAuteurCourant = user.email;
+      document.getElementById("ecrit-en-tant-que").textContent = `Vous écrivez en tant que ${nomAuteurCourant}`;
+      formulaire.style.display = "block";
+    }
+  });
+});
 
 document.getElementById("form-message").addEventListener("submit", (e) => {
   e.preventDefault();
-  const auteur = document.getElementById("champ-auteur").value.trim();
   const contenu = document.getElementById("champ-contenu").value.trim();
-  if (!auteur || !contenu) return;
+  if (!contenu || !nomAuteurCourant) return;
 
   const bouton = e.target.querySelector("button");
   bouton.disabled = true;
   bouton.textContent = "Publication…";
 
   db.collection("messages").add({
-    auteur,
+    auteur: nomAuteurCourant,
     contenu,
     date: new Date().toISOString().slice(0,10)
   }).then(() => {
@@ -124,8 +171,6 @@ document.getElementById("form-message").addEventListener("submit", (e) => {
     bouton.textContent = "Publier";
   });
 });
-
-chargerMessages();
 </script>
 </body>
 </html>
