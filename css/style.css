@@ -3,8 +3,11 @@
    Palette tirée du maillot du club (rouge/noir) + gris "boule en acier"
    ============================================================ */
 
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600;700&family=Work+Sans:wght@400;500;600&display=swap');
+
 :root{
   --rouge:        #C8102E;
+  --rouge-vif:    #E01438;
   --rouge-fonce:  #8F0B21;
   --noir:         #141414;
   --noir-doux:    #1f1f1f;
@@ -14,12 +17,17 @@
   --blanc:        #FFFFFF;
   --vert-ok:      #2E7D4F;
   --rouge-neg:    #C8102E;
+  --or:           #D4AF37;
+  --argent:       #A9A9AE;
+  --bronze:       #B0703A;
 
+  --police-affiche: "Anton", "Oswald", "Arial Narrow", sans-serif;
   --police-titre: "Oswald", "Arial Narrow", sans-serif;
   --police-texte: "Work Sans", "Segoe UI", sans-serif;
 
-  --rayon: 10px;
-  --ombre: 0 4px 14px rgba(0,0,0,.18);
+  --rayon: 14px;
+  --ombre: 0 6px 20px rgba(20,14,10,.12);
+  --ombre-forte: 0 16px 34px rgba(20,14,10,.2);
 }
 
 *{ box-sizing: border-box; }
@@ -28,9 +36,12 @@ html{ scroll-behavior: smooth; }
 body{
   margin:0;
   font-family: var(--police-texte);
-  background: var(--sable);
   color: var(--noir);
   line-height: 1.5;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(20,14,10,.045) 1px, transparent 0) 0 0/16px 16px,
+    linear-gradient(165deg, #f2ead9 0%, var(--sable) 45%, #e6d9bd 100%);
+  background-attachment: fixed;
 }
 
 h1,h2,h3,h4{
@@ -51,17 +62,27 @@ button, .btn{
   text-transform: uppercase;
   letter-spacing: .04em;
   border:none;
-  border-radius: var(--rayon);
-  padding: .7em 1.4em;
-  background: var(--rouge);
+  border-radius: 999px;
+  padding: .75em 1.5em;
+  background: linear-gradient(135deg, var(--rouge-vif) 0%, var(--rouge-fonce) 100%);
   color: var(--blanc);
   cursor:pointer;
   font-size: .9rem;
-  transition: transform .12s ease, background .12s ease;
+  box-shadow: 0 6px 16px rgba(200,16,46,.32);
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
 }
-button:hover, .btn:hover{ background: var(--rouge-fonce); transform: translateY(-1px); }
-button.secondaire, .btn.secondaire{ background: var(--noir); }
-button.secondaire:hover{ background:#000; }
+button:hover, .btn:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(200,16,46,.42);
+  filter: brightness(1.05);
+}
+button:active, .btn:active{ transform: translateY(0); }
+button.secondaire, .btn.secondaire{
+  background: linear-gradient(135deg, #2a2a2a 0%, var(--noir) 100%);
+  box-shadow: 0 6px 16px rgba(0,0,0,.28);
+}
+button.secondaire:hover{ box-shadow: 0 10px 22px rgba(0,0,0,.36); }
+button:disabled{ opacity:.6; cursor:default; transform:none; }
 button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible{
   outline: 3px solid var(--acier);
   outline-offset: 2px;
@@ -94,10 +115,13 @@ input, textarea, select{
 
 /* ---------- Entête / navigation ---------- */
 header.entete{
-  background: var(--noir);
+  background: rgba(20,20,20,.82);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
   color: var(--blanc);
   position: sticky; top:0; z-index: 50;
-  box-shadow: var(--ombre);
+  box-shadow: 0 4px 18px rgba(0,0,0,.22);
+  border-bottom: 1px solid rgba(255,255,255,.06);
 }
 .entete-inner{
   max-width: 1180px; margin:0 auto;
@@ -119,10 +143,12 @@ nav.principale a{
   font-size:.82rem;
   letter-spacing:.05em;
   padding:.5rem .7rem;
-  border-radius: 6px;
+  border-radius: 999px;
+  transition: background .18s ease, color .18s ease, transform .12s ease;
 }
+nav.principale a:hover{ transform: translateY(-1px); }
 nav.principale a:hover, nav.principale a.actif{
-  background: var(--rouge);
+  background: linear-gradient(135deg, var(--rouge-vif), var(--rouge-fonce));
   color:#fff;
   text-decoration:none;
 }
@@ -146,22 +172,34 @@ nav.principale a:hover, nav.principale a.actif{
 .hero{
   position:relative;
   color:#fff;
-  background: linear-gradient(160deg, var(--noir) 0%, var(--noir-doux) 55%, var(--rouge-fonce) 130%);
+  background: linear-gradient(155deg, var(--noir) 0%, var(--noir-doux) 45%, var(--rouge-fonce) 145%);
   padding: 3.4rem 1.2rem 3rem;
   overflow:hidden;
 }
-.hero::before{
-  /* Anneaux du cochonnet — motif cible en fond, discret */
+.hero::after{
+  /* Grain subtil pour casser l'aplat sombre */
   content:"";
-  position:absolute; right:-90px; top:50%; transform:translateY(-50%);
+  position:absolute; inset:0;
+  background: radial-gradient(circle at 1px 1px, rgba(255,255,255,.05) 1px, transparent 0) 0 0/18px 18px;
+  pointer-events:none;
+}
+.hero::before{
+  /* Anneaux du cochonnet — motif cible en fond, animé doucement */
+  content:"";
+  position:absolute; right:-90px; top:50%;
   width:420px; height:420px;
   border-radius:50%;
-  border: 2px solid rgba(255,255,255,.06);
+  border: 2px solid rgba(255,255,255,.07);
   box-shadow:
-    0 0 0 40px rgba(255,255,255,.045) inset,
-    0 0 0 80px rgba(255,255,255,.03) inset,
-    0 0 0 120px rgba(255,255,255,.02) inset;
+    0 0 0 40px rgba(255,255,255,.05) inset,
+    0 0 0 80px rgba(255,255,255,.035) inset,
+    0 0 0 120px rgba(255,255,255,.022) inset;
   pointer-events:none;
+  animation: pulseAnneaux 7s ease-in-out infinite;
+}
+@keyframes pulseAnneaux{
+  0%, 100%{ transform: translateY(-50%) scale(1); opacity:.7; }
+  50%{ transform: translateY(-50%) scale(1.05); opacity:1; }
 }
 .hero-inner{ max-width: 1180px; margin:0 auto; position:relative; z-index:2; }
 .hero .eyebrow{
@@ -169,8 +207,19 @@ nav.principale a:hover, nav.principale a.actif{
   color: var(--acier-clair);
   letter-spacing:.18em; text-transform:uppercase; font-size:.75rem;
   margin-bottom:.6rem;
+  display:inline-flex; align-items:center; gap:.5rem;
 }
-.hero h1{ color:#fff; font-size: clamp(1.8rem, 4vw, 3rem); max-width: 720px; margin-bottom:.5rem;}
+.hero .eyebrow::before{
+  content:""; width:22px; height:2px; background: var(--rouge-vif); display:inline-block;
+}
+.hero h1{
+  font-family: var(--police-affiche);
+  font-weight:400;
+  color:#fff; font-size: clamp(2.1rem, 5vw, 3.6rem);
+  letter-spacing: .01em;
+  max-width: 720px; margin-bottom:.5rem;
+  text-shadow: 0 2px 24px rgba(200,16,46,.35);
+}
 .hero p.lead{ max-width: 620px; color: var(--acier-clair); font-size:1.05rem; }
 .hero .actions{ margin-top:1.4rem; display:flex; gap:.8rem; flex-wrap:wrap; }
 
@@ -179,6 +228,12 @@ main{ max-width: 1180px; margin: 0 auto; padding: 2.4rem 1.2rem 4rem; }
 section{ margin-bottom: 2.6rem; }
 .section-tete{ display:flex; align-items:baseline; justify-content:space-between; gap:1rem; flex-wrap:wrap; margin-bottom:1rem;}
 .section-tete p{ color:#555; margin:0; }
+.section-tete h2{ position:relative; padding-left:1rem; margin-bottom:0; }
+.section-tete h2::before{
+  content:""; position:absolute; left:0; top:.12em; bottom:.12em; width:5px;
+  background: linear-gradient(180deg, var(--rouge-vif), var(--rouge-fonce));
+  border-radius:3px;
+}
 
 .grille{ display:grid; gap: 1.1rem; }
 .grille.cols-2{ grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); }
@@ -186,12 +241,14 @@ section{ margin-bottom: 2.6rem; }
 .grille.cols-4{ grid-template-columns: repeat(auto-fit, minmax(190px,1fr)); }
 
 .carte{
-  background: var(--blanc);
+  background: linear-gradient(165deg, #fff 0%, #fdfbf7 100%);
   border-radius: var(--rayon);
   box-shadow: var(--ombre);
-  padding: 1.2rem;
+  padding: 1.3rem 1.3rem 1.4rem;
   border-top: 4px solid var(--rouge);
+  transition: transform .2s ease, box-shadow .2s ease;
 }
+.carte:hover{ transform: translateY(-4px); box-shadow: var(--ombre-forte); }
 .carte h3{ font-size: 1rem; margin-bottom:.3rem; }
 
 /* ---------- Fiches joueurs ---------- */
@@ -199,18 +256,25 @@ section{ margin-bottom: 2.6rem; }
   background:#fff; border-radius: var(--rayon); overflow:hidden;
   box-shadow: var(--ombre); cursor:pointer; text-align:center;
   border-bottom: 4px solid var(--rouge);
-  transition: transform .12s ease;
+  position: relative;
+  transition: transform .22s ease, box-shadow .22s ease;
 }
-.carte-joueur:hover{ transform: translateY(-3px); }
+.carte-joueur::after{
+  content:""; position:absolute; inset:0;
+  background: radial-gradient(circle at 50% 0%, rgba(200,16,46,.28), transparent 65%);
+  opacity:0; transition: opacity .25s ease; pointer-events:none;
+}
+.carte-joueur:hover{ transform: translateY(-6px) scale(1.015); box-shadow: var(--ombre-forte); }
+.carte-joueur:hover::after{ opacity:1; }
 .carte-joueur .photo{
   width:100%; aspect-ratio:1/1; object-fit:cover;
   background: var(--noir);
 }
 .carte-joueur .photo.vide{
   display:flex; align-items:center; justify-content:center;
-  color: var(--acier-clair); font-family:var(--police-titre); font-size:2.2rem;
+  color: var(--acier-clair); font-family:var(--police-affiche); font-size:2.4rem;
 }
-.carte-joueur .infos{ padding:.9rem .6rem 1.1rem; }
+.carte-joueur .infos{ padding:.9rem .6rem 1.1rem; position:relative; z-index:1; }
 .carte-joueur .nom{ font-family:var(--police-titre); text-transform:uppercase; font-size:1rem; }
 .carte-joueur .role{ color: var(--rouge); font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; }
 
@@ -218,7 +282,7 @@ section{ margin-bottom: 2.6rem; }
 .table-scroll{ overflow-x:auto; background:#fff; border-radius: var(--rayon); box-shadow: var(--ombre); }
 table.classement{ width:100%; border-collapse:collapse; min-width: 720px; }
 table.classement th, table.classement td{
-  padding:.6rem .7rem; text-align:center; border-bottom:1px solid #eee; font-size:.9rem;
+  padding:.65rem .7rem; text-align:center; border-bottom:1px solid #eee; font-size:.9rem;
 }
 table.classement th{
   background: var(--noir); color:#fff;
@@ -226,19 +290,40 @@ table.classement th{
   position: sticky; top:0;
 }
 table.classement td.joueurs{ text-align:left; }
-table.classement tr:nth-child(1) td.rang{ color: var(--rouge); font-weight:700; }
 table.classement td.diff.positif{ color: var(--vert-ok); font-weight:700; }
 table.classement td.diff.negatif{ background: #fdeceb; color: var(--rouge-neg); font-weight:700; }
+table.classement tbody tr{ transition: background .15s ease; }
 table.classement tbody tr:hover{ background: #faf7f0; }
+
+/* Podium (1er/2e/3e) : léger dégradé de fond + médaille devant le rang */
+table.classement tbody tr.or{ background: linear-gradient(90deg, rgba(212,175,55,.16), transparent 65%); }
+table.classement tbody tr.argent{ background: linear-gradient(90deg, rgba(169,169,174,.18), transparent 65%); }
+table.classement tbody tr.bronze{ background: linear-gradient(90deg, rgba(176,112,58,.16), transparent 65%); }
+table.classement tbody tr.or:hover{ background: linear-gradient(90deg, rgba(212,175,55,.24), transparent 65%); }
+table.classement tbody tr.argent:hover{ background: linear-gradient(90deg, rgba(169,169,174,.26), transparent 65%); }
+table.classement tbody tr.bronze:hover{ background: linear-gradient(90deg, rgba(176,112,58,.24), transparent 65%); }
+table.classement td.rang{ font-family: var(--police-titre); font-weight:600; }
+.medaille{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:22px; height:22px; border-radius:50%; margin-right:.35rem;
+  font-size:.72rem; font-family: var(--police-titre); color:#fff;
+  vertical-align:middle;
+}
+.medaille.or{ background: linear-gradient(155deg, #f3d271, var(--or)); box-shadow: 0 2px 6px rgba(212,175,55,.5); }
+.medaille.argent{ background: linear-gradient(155deg, #d8d8dc, var(--argent)); box-shadow: 0 2px 6px rgba(169,169,174,.5); }
+.medaille.bronze{ background: linear-gradient(155deg, #d69a67, var(--bronze)); box-shadow: 0 2px 6px rgba(176,112,58,.5); }
 
 /* ---------- Calendrier (cartes de match) ---------- */
 .match{
   display:flex; gap:1rem; align-items:center;
-  background:#fff; border-radius: var(--rayon); box-shadow: var(--ombre);
+  background: linear-gradient(165deg, #fff 0%, #fdfbf7 100%);
+  border-radius: var(--rayon); box-shadow: var(--ombre);
   padding: .9rem 1.1rem; border-left:4px solid var(--rouge);
+  transition: transform .2s ease, box-shadow .2s ease;
 }
+.match:hover{ transform: translateY(-3px); box-shadow: var(--ombre-forte); }
 .match .date-bloc{
-  background: var(--noir); color:#fff; border-radius:8px;
+  background: linear-gradient(155deg, #2a2a2a, var(--noir)); color:#fff; border-radius:10px;
   min-width:64px; text-align:center; padding:.5rem .3rem;
   font-family: var(--police-titre);
 }
@@ -251,9 +336,12 @@ table.classement tbody tr:hover{ background: #faf7f0; }
 
 /* ---------- Messagerie ---------- */
 .message{
-  background:#fff; border-radius: var(--rayon); box-shadow: var(--ombre);
+  background: linear-gradient(165deg, #fff 0%, #fdfbf7 100%);
+  border-radius: var(--rayon); box-shadow: var(--ombre);
   padding:1rem 1.1rem; border-left:4px solid var(--acier);
+  transition: transform .2s ease, box-shadow .2s ease;
 }
+.message:hover{ transform: translateY(-3px); box-shadow: var(--ombre-forte); }
 .message .entete-msg{ display:flex; justify-content:space-between; font-size:.78rem; color:#666; margin-bottom:.4rem; }
 .message .entete-msg .auteur{ font-family:var(--police-titre); color:var(--noir); font-size:.85rem; }
 
@@ -296,3 +384,11 @@ footer a{ color:#fff; }
 .alerte{ padding:.7rem 1rem; border-radius:8px; font-size:.88rem; margin-bottom:1rem; }
 .alerte.erreur{ background:#fdeceb; color:var(--rouge-neg); border:1px solid #f3c3bd; }
 .alerte.ok{ background:#e8f4ec; color:var(--vert-ok); border:1px solid #bfe2cb; }
+
+/* ---------- Animations d'apparition au défilement ---------- */
+.au-scroll{ opacity:0; transform: translateY(18px); transition: opacity .55s ease, transform .55s ease; }
+.au-scroll.visible{ opacity:1; transform:none; }
+@media (prefers-reduced-motion: reduce){
+  .au-scroll{ opacity:1; transform:none; transition:none; }
+  .hero::before{ animation:none; }
+}
