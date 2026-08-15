@@ -26,10 +26,6 @@ function echapper(txt) {
 }
 
 // Affiche/masque les liens Connexion / Inscription / Déconnexion selon l'état de connexion.
-// À placer dans la nav de chaque page publique :
-//   <a href="connexion.html" id="lien-connexion">Connexion</a>
-//   <a href="inscription.html" id="lien-inscription">Inscription</a>
-//   <a href="#" id="lien-deconnexion" style="display:none;">Déconnexion</a>
 if (typeof auth !== "undefined") {
   auth.onAuthStateChanged(user => {
     const c = document.getElementById("lien-connexion");
@@ -66,3 +62,35 @@ function afficherAlerte(conteneurId, message, type = "ok") {
   conteneur.innerHTML = `<div class="alerte ${type}">${echapper(message)}</div>`;
   if (type === "ok") setTimeout(() => { conteneur.innerHTML = ""; }, 4000);
 }
+
+// ---------- Apparition en fondu au défilement ----------
+const observateurScroll = ("IntersectionObserver" in window)
+  ? new IntersectionObserver((entrees) => {
+      entrees.forEach(entree => {
+        if (entree.isIntersecting) {
+          entree.target.classList.add("visible");
+          observateurScroll.unobserve(entree.target);
+        }
+      });
+    }, { threshold: .12 })
+  : null;
+
+function activerRevelationScroll(conteneur) {
+  if (!observateurScroll) return;
+  const racine = conteneur || document;
+  racine.querySelectorAll(".carte, .carte-joueur, .match, .message").forEach(el => {
+    if (el.dataset.revele) return;
+    el.dataset.revele = "1";
+    el.classList.add("au-scroll");
+    observateurScroll.observe(el);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  activerRevelationScroll();
+  const main = document.querySelector("main");
+  if (main && "MutationObserver" in window) {
+    const observateurMutation = new MutationObserver(() => activerRevelationScroll(main));
+    observateurMutation.observe(main, { childList: true, subtree: true });
+  }
+});
